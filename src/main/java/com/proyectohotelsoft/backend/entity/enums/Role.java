@@ -1,4 +1,4 @@
-package com.proyectohotelsoft.backend.entity;
+package com.proyectohotelsoft.backend.entity.enums;
 
 /**
  * Define los roles disponibles en el sistema HotelSoft.

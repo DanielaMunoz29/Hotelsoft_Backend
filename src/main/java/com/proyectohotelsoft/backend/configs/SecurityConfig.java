@@ -3,6 +3,7 @@ package com.proyectohotelsoft.backend.configs;
 import com.proyectohotelsoft.backend.utils.TokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -39,13 +40,23 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // --PUBLICOS-- //
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/users/exists/**").permitAll()
                 .requestMatchers("/api/users/register").permitAll()
                 .requestMatchers("/oauth2/**").permitAll() // Rutas OAuth2
                 .requestMatchers("/login/**").permitAll() // Rutas de login
                 .requestMatchers("/error").permitAll()
-                .anyRequest().authenticated()
+
+                //  --PROTEGIDOS-- //
+                .requestMatchers("/api/habitaciones/crearHabitacion").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/habitaciones/{numeroHabitacion}").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/habitaciones/estado/{estado}").authenticated()
+                .requestMatchers(HttpMethod.PATCH, "/api/habitaciones/{numeroHabitacion}/estado").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/habitaciones/{numeroHabitacion}").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/habitaciones/{numeroHabitacion}").authenticated()
+
+                .anyRequest().permitAll()
             )
             .oauth2Login(oauth2 -> oauth2
                 .defaultSuccessUrl("http://localhost:4200/login-success", true)
