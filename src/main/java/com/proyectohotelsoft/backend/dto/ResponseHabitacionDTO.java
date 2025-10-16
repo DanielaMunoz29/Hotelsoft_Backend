@@ -1,5 +1,7 @@
 package com.proyectohotelsoft.backend.dto;
 
+import java.util.List;
+
 public record ResponseHabitacionDTO (
 
     String numeroHabitacion,
@@ -7,7 +9,8 @@ public record ResponseHabitacionDTO (
     String tipoHabitacion,
     String estadoHabitacion,
     String precio,
-    boolean enabled
+    boolean enabled,
+    List<String> comodidades
 
 ){
 }

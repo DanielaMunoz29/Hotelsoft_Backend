@@ -3,6 +3,7 @@ package com.proyectohotelsoft.backend.services.impl;
 import com.proyectohotelsoft.backend.dto.HabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ResponseHabitacionDTO;
 import com.proyectohotelsoft.backend.entity.Habitacion;
+import com.proyectohotelsoft.backend.entity.enums.Comodidad;
 import com.proyectohotelsoft.backend.entity.enums.EstadoHabitacion;
 import com.proyectohotelsoft.backend.entity.enums.TipoHabitacion;
 import com.proyectohotelsoft.backend.exceptions.NotFoundException;
@@ -17,8 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -94,6 +96,13 @@ public class HabitacionServiceImpl implements HabitacionService {
         habitacion.setDescripcion(dto.descripcion());
         habitacion.setTipo(TipoHabitacion.fromNombre(dto.tipoHabitacion()));
         habitacion.setPrecio(dto.precio());
+
+        if (dto.comodidades() != null) {
+            Set<Comodidad> nuevasComodidades = dto.comodidades().stream()
+                    .map(Comodidad::fromNombre)
+                    .collect(Collectors.toSet());
+            habitacion.setComodidades(nuevasComodidades);
+        }
 
         return habitacionMapper.toResponseDTO(habitacion);
     }

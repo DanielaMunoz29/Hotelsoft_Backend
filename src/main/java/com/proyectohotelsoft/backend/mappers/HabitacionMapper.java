@@ -3,9 +3,14 @@ package com.proyectohotelsoft.backend.mappers;
 import com.proyectohotelsoft.backend.dto.HabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ResponseHabitacionDTO;
 import com.proyectohotelsoft.backend.entity.Habitacion;
+import com.proyectohotelsoft.backend.entity.enums.Comodidad;
 import com.proyectohotelsoft.backend.entity.enums.EstadoHabitacion;
 import com.proyectohotelsoft.backend.entity.enums.TipoHabitacion;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class HabitacionMapper {
@@ -30,6 +35,19 @@ public class HabitacionMapper {
         habitacion.setEstado(EstadoHabitacion.DISPONIBLE); // o el estado inicial que uses
 
         habitacion.setEnabled(true);
+
+        if (dto.comodidades() != null && !dto.comodidades().isEmpty()) {
+            Set<Comodidad> comodidadesEnum = dto.comodidades().stream()
+                    .map(nombre -> {
+                        try {
+                            return Comodidad.fromNombre(nombre);
+                        } catch (IllegalArgumentException e) {
+                            throw new IllegalArgumentException("Comodidad inválida: " + nombre);
+                        }
+                    })
+                    .collect(Collectors.toSet());
+            habitacion.setComodidades(comodidadesEnum);
+        }
         return habitacion;
     }
 
@@ -41,13 +59,18 @@ public class HabitacionMapper {
             return null;
         }
 
+        List<String> comodidadesString = habitacion.getComodidades().stream()
+                .map(Enum::name)
+                .toList();
+
         return new ResponseHabitacionDTO(
                 habitacion.getNumeroHabitacion(),
                 habitacion.getDescripcion(),
                 habitacion.getTipo().name(),     // devuelve el nombre del enum como String
                 habitacion.getEstado().name(),   // idem
                 String.format("%.2f", habitacion.getPrecio()), // lo pasas a String con 2 decimales
-                habitacion.isEnabled()
+                habitacion.isEnabled(),
+                comodidadesString
         );
     }
 

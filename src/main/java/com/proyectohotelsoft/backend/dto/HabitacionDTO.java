@@ -1,10 +1,13 @@
 package com.proyectohotelsoft.backend.dto;
 
+import java.util.List;
+
 public record HabitacionDTO(
 
     String numeroHabitacion,
     String descripcion,
     String tipoHabitacion,
-    double precio
+    double precio,
+    List<String> comodidades
 ) {
 }

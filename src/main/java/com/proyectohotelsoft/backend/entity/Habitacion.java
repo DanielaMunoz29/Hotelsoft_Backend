@@ -1,11 +1,14 @@
 package com.proyectohotelsoft.backend.entity;
 
+import com.proyectohotelsoft.backend.entity.enums.Comodidad;
 import com.proyectohotelsoft.backend.entity.enums.EstadoHabitacion;
 import com.proyectohotelsoft.backend.entity.enums.TipoHabitacion;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "habitaciones")
@@ -35,5 +38,14 @@ public class Habitacion {
 
     @Column(nullable = false)
     private boolean enabled = true;
+
+    @ElementCollection(targetClass = Comodidad.class)
+    @CollectionTable(
+        name = "habitacion_comodidades",
+        joinColumns = @JoinColumn(name = "habitacion_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "comodidad")
+    private Set<Comodidad> comodidades = new HashSet<>();
 
 }
