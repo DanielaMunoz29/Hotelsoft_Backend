@@ -24,6 +24,8 @@ public class Habitacion {
     @Column(unique = true, nullable = false)
     private String numeroHabitacion;
 
+    private String nombreHabitacion;
+
     @Column(length = 200)
     private String descripcion;
 

@@ -25,6 +25,7 @@ public class HabitacionMapper {
 
         Habitacion habitacion = new Habitacion();
         habitacion.setNumeroHabitacion(dto.numeroHabitacion());
+        habitacion.setNombreHabitacion(dto.nombreHabitacion());
         habitacion.setDescripcion(dto.descripcion());
         habitacion.setPrecio(dto.precio());
 
@@ -65,6 +66,7 @@ public class HabitacionMapper {
 
         return new ResponseHabitacionDTO(
                 habitacion.getNumeroHabitacion(),
+                habitacion.getNombreHabitacion(),
                 habitacion.getDescripcion(),
                 habitacion.getTipo().name(),     // devuelve el nombre del enum como String
                 habitacion.getEstado().name(),   // idem

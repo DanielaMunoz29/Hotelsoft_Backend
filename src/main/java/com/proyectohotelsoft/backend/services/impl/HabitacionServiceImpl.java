@@ -6,6 +6,7 @@ import com.proyectohotelsoft.backend.entity.Habitacion;
 import com.proyectohotelsoft.backend.entity.enums.Comodidad;
 import com.proyectohotelsoft.backend.entity.enums.EstadoHabitacion;
 import com.proyectohotelsoft.backend.entity.enums.TipoHabitacion;
+import com.proyectohotelsoft.backend.exceptions.AlreadyExistsException;
 import com.proyectohotelsoft.backend.exceptions.NotFoundException;
 import com.proyectohotelsoft.backend.mappers.HabitacionMapper;
 import com.proyectohotelsoft.backend.repository.HabitacionRepository;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,7 +39,7 @@ public class HabitacionServiceImpl implements HabitacionService {
     public Habitacion crearHabitacion(HabitacionDTO dto) {
 
         if (habitacionRepository.findByNumeroHabitacion(dto.numeroHabitacion()).isPresent()) {
-            throw new RuntimeException("Esta habitacion ya existe");//TODO cambiar la excepcion
+            throw new AlreadyExistsException("Esta habitacion ya existe");
         }
 
         Habitacion habitacion = habitacionMapper.toEntity(dto);
@@ -89,10 +91,11 @@ public class HabitacionServiceImpl implements HabitacionService {
         // Validar duplicado solo si el número nuevo es distinto
         Optional<Habitacion> habitacionExistente = habitacionRepository.findByNumeroHabitacion(dto.numeroHabitacion());
         if (habitacionExistente.isPresent() && !habitacionExistente.get().getNumeroHabitacion().equals(numeroHabitacion)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una habitación con el número " + dto.numeroHabitacion());
+            throw new AlreadyExistsException("Ya existe una habitación con el número " + dto.numeroHabitacion());
         }
 
         habitacion.setNumeroHabitacion(dto.numeroHabitacion());
+        habitacion.setNombreHabitacion(dto.nombreHabitacion());
         habitacion.setDescripcion(dto.descripcion());
         habitacion.setTipo(TipoHabitacion.fromNombre(dto.tipoHabitacion()));
         habitacion.setPrecio(dto.precio());
@@ -118,17 +121,25 @@ public class HabitacionServiceImpl implements HabitacionService {
 
     @Override
     public Page<ResponseHabitacionDTO> getByTipo(String tipo, Pageable pageable) {
-        //TODO capturar exception interna de "fromNombre" y devolver un NotFoundException
-        TipoHabitacion tipoEnum = TipoHabitacion.fromNombre(tipo);
-        return habitacionRepository.findByTipo(tipoEnum, pageable)
-                .map(habitacionMapper::toResponseDTO);
+        try {
+            TipoHabitacion tipoEnum = TipoHabitacion.fromNombre(tipo);
+            return habitacionRepository.findByTipo(tipoEnum, pageable)
+                    .map(habitacionMapper::toResponseDTO);
+        } catch (Exception e) {
+            throw new NotFoundException("Tipo invalido: " + tipo);
+        }
+
     }
 
     @Override
     public Page<ResponseHabitacionDTO> getByEstado(String estado, Pageable pageable) {
-        //TODO capturar exception interna de "fromNombre" y devolver un NotFoundException
-        EstadoHabitacion estadoEnum = EstadoHabitacion.fromNombre(estado);
-        return habitacionRepository.findByEstado(estadoEnum, pageable)
-                .map(habitacionMapper::toResponseDTO);
+        try {
+            EstadoHabitacion estadoEnum = EstadoHabitacion.fromNombre(estado);
+            return habitacionRepository.findByEstado(estadoEnum, pageable)
+                    .map(habitacionMapper::toResponseDTO);
+        } catch (Exception e) {
+            throw new NotFoundException("Estado invaldo: " + estado);
+        }
+
     }
 }

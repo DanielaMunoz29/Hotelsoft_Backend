@@ -2,6 +2,7 @@ package com.proyectohotelsoft.backend.controller;
 
 import com.proyectohotelsoft.backend.dto.HabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ResponseHabitacionDTO;
+import com.proyectohotelsoft.backend.exceptions.AlreadyExistsException;
 import com.proyectohotelsoft.backend.services.HabitacionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/habitaciones")
@@ -23,8 +26,13 @@ public class HabitacionController {
 
     @PostMapping //X
     public ResponseEntity<?> crearHabitacion(@RequestBody HabitacionDTO dto) {
-        var nuevaHabitacion = habitacionService.crearHabitacion(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaHabitacion);
+        try {
+            var nuevaHabitacion = habitacionService.crearHabitacion(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevaHabitacion);
+        }catch (AlreadyExistsException ae){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error",ae.getMessage()));
+        }
+
     }
 
     @GetMapping //X
