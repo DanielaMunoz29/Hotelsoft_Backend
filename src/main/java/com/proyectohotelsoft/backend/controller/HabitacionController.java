@@ -3,6 +3,7 @@ package com.proyectohotelsoft.backend.controller;
 import com.proyectohotelsoft.backend.dto.HabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ResponseHabitacionDTO;
 import com.proyectohotelsoft.backend.exceptions.AlreadyExistsException;
+import com.proyectohotelsoft.backend.services.CloudinaryService;
 import com.proyectohotelsoft.backend.services.HabitacionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,31 +28,63 @@ public class HabitacionController {
     @Autowired
     private final HabitacionService habitacionService;
 
+    private final CloudinaryService cloudinaryService;
 
-    @PostMapping //X
-    public ResponseEntity<?> crearHabitacion(@RequestBody HabitacionDTO dto) {
+
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<?> crearHabitacion(
+            @RequestPart("habitacion") HabitacionDTO dto,
+            @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes) {
+
         try {
-            var nuevaHabitacion = habitacionService.crearHabitacion(dto);
+
+            List<String> urlsImagenes = new ArrayList<>();
+            if (imagenes != null && !imagenes.isEmpty()) {
+                urlsImagenes = cloudinaryService.subirMultiplesImagenes(imagenes);
+            }
+
+            HabitacionDTO dtoConImagenes = new HabitacionDTO(
+                    dto.numeroHabitacion(),
+                    dto.nombreHabitacion(),
+                    dto.descripcion(),
+                    dto.tipoHabitacion(),
+                    dto.precio(),
+                    dto.comodidades(),
+                    urlsImagenes
+            );
+
+            var nuevaHabitacion = habitacionService.crearHabitacion(dtoConImagenes);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevaHabitacion);
-        }catch (AlreadyExistsException ae){
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error",ae.getMessage()));
+
+        } catch (AlreadyExistsException ae) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ae.getMessage()));
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al subir imágenes a Cloudinary: " + e.getMessage()));
         }
 
     }
 
-    @GetMapping //X
+    @GetMapping
     public ResponseEntity<Page<ResponseHabitacionDTO>> getAll(Pageable pageable) {
         Page<ResponseHabitacionDTO> habitaciones = habitacionService.getAll(pageable);
         return ResponseEntity.ok(habitaciones);
     }
 
-    @GetMapping("/{numeroHabitacion}") //X
+    @GetMapping("/{numeroHabitacion}")
     public ResponseEntity<ResponseHabitacionDTO> getByNumero(@PathVariable String numeroHabitacion) {
         ResponseHabitacionDTO habitacion = habitacionService.getByNumero(numeroHabitacion);
         return ResponseEntity.ok(habitacion);
     }
 
-    @GetMapping("/tipo/{tipo}") //X
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseHabitacionDTO> getById(@PathVariable Long id) {
+        ResponseHabitacionDTO habitacion = habitacionService.getById(id);
+        return ResponseEntity.ok(habitacion);
+    }
+
+    @GetMapping("/tipo/{tipo}")
     public ResponseEntity<Page<ResponseHabitacionDTO>> getByTipo(
             @PathVariable String tipo,
             Pageable pageable
@@ -56,7 +93,7 @@ public class HabitacionController {
         return ResponseEntity.ok(habitaciones);
     }
 
-    @GetMapping("/estado/{estado}") //X
+    @GetMapping("/estado/{estado}")
     public ResponseEntity<Page<ResponseHabitacionDTO>> getByEstado(
             @PathVariable String estado,
             Pageable pageable
@@ -65,7 +102,7 @@ public class HabitacionController {
         return ResponseEntity.ok(habitaciones);
     }
 
-    @PatchMapping("/{numeroHabitacion}/estado") //X
+    @PatchMapping("/{numeroHabitacion}/estado")
     public ResponseEntity<ResponseHabitacionDTO> cambiarEstado(
             @PathVariable String numeroHabitacion,
             @RequestParam String nuevoEstado
@@ -75,17 +112,46 @@ public class HabitacionController {
         return ResponseEntity.ok(habitacionActualizada);
     }
 
-    @PutMapping("/{numeroHabitacion}") //X
-    public ResponseEntity<ResponseHabitacionDTO> editarHabitacion(
+    @PutMapping(value = "/{numeroHabitacion}", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> editarHabitacion(
             @PathVariable String numeroHabitacion,
-            @RequestBody HabitacionDTO dto
+            @RequestPart("habitacion") HabitacionDTO dto,
+            @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes
     ) {
-        ResponseHabitacionDTO habitacionActualizada =
-                habitacionService.editarHabitacion(numeroHabitacion, dto);
-        return ResponseEntity.ok(habitacionActualizada);
+        try {
+            List<String> urlsImagenes = new ArrayList<>();
+
+            // Si se envían imágenes nuevas, las subimos a Cloudinary
+            if (imagenes != null && !imagenes.isEmpty()) {
+                urlsImagenes = cloudinaryService.subirMultiplesImagenes(imagenes);
+            }
+
+            // Creamos un nuevo DTO combinando los datos previos y las nuevas imágenes
+            HabitacionDTO dtoConImagenes = new HabitacionDTO(
+                    dto.numeroHabitacion(),
+                    dto.nombreHabitacion(),
+                    dto.descripcion(),
+                    dto.tipoHabitacion(),
+                    dto.precio(),
+                    dto.comodidades(),
+                    urlsImagenes.isEmpty() ? dto.imagenes() : urlsImagenes // mantiene las existentes si no hay nuevas
+            );
+
+            ResponseHabitacionDTO habitacionActualizada =
+                    habitacionService.editarHabitacion(numeroHabitacion, dtoConImagenes);
+
+            return ResponseEntity.ok(habitacionActualizada);
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al subir imágenes a Cloudinary: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 
-    @DeleteMapping("/{numeroHabitacion}") //X
+    @DeleteMapping("/{numeroHabitacion}")
     public ResponseEntity<Void> eliminarHabitacion(@PathVariable String numeroHabitacion) {
         habitacionService.eliminarHabitacion(numeroHabitacion);
         return ResponseEntity.noContent().build();

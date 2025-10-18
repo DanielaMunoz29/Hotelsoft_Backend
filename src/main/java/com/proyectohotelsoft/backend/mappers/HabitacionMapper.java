@@ -15,9 +15,6 @@ import java.util.stream.Collectors;
 @Component
 public class HabitacionMapper {
 
-    // ============================================================
-    // 1️⃣ De DTO de entrada → Entidad
-    // ============================================================
     public Habitacion toEntity(HabitacionDTO dto) {
         if (dto == null) {
             return null;
@@ -49,12 +46,11 @@ public class HabitacionMapper {
                     .collect(Collectors.toSet());
             habitacion.setComodidades(comodidadesEnum);
         }
+
+        habitacion.setImagenes(dto.imagenes());
         return habitacion;
     }
 
-    // ============================================================
-    // 2️⃣ De Entidad → DTO de respuesta
-    // ============================================================
     public ResponseHabitacionDTO toResponseDTO(Habitacion habitacion) {
         if (habitacion == null) {
             return null;
@@ -72,19 +68,8 @@ public class HabitacionMapper {
                 habitacion.getEstado().name(),   // idem
                 String.format("%.2f", habitacion.getPrecio()), // lo pasas a String con 2 decimales
                 habitacion.isEnabled(),
-                comodidadesString
+                comodidadesString,
+                habitacion.getImagenes()
         );
-    }
-
-    // ============================================================
-    // 3️⃣ Actualización de entidad existente desde DTO
-    // ============================================================
-    public void updateEntityFromDTO(HabitacionDTO dto, Habitacion habitacion) {
-        if (dto == null || habitacion == null) return;
-
-        habitacion.setDescripcion(dto.descripcion());
-        habitacion.setPrecio(dto.precio());
-        habitacion.setTipo(TipoHabitacion.valueOf(dto.tipoHabitacion().toUpperCase()));
-        // El número de habitación normalmente no se cambia (clave lógica)
     }
 }

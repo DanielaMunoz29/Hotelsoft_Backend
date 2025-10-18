@@ -11,7 +11,8 @@ public record ResponseHabitacionDTO (
     String estadoHabitacion,
     String precio,
     boolean enabled,
-    List<String> comodidades
+    List<String> comodidades,
+    List<String> imagenes
 
 ){
 }

@@ -7,7 +7,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -49,5 +51,17 @@ public class Habitacion {
     @Enumerated(EnumType.STRING)
     @Column(name = "comodidad")
     private Set<Comodidad> comodidades = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(
+        name = "habitacion_imagenes",
+        joinColumns = @JoinColumn(name = "habitacion_id")
+    )
+    @Column(name = "url_imagen")
+    @OrderColumn(name = "orden")
+    private List<String> imagenes = new ArrayList<>();
+
+    @OneToOne(mappedBy = "habitacion", cascade = CascadeType.ALL)
+    private Reserva reserva;
 
 }

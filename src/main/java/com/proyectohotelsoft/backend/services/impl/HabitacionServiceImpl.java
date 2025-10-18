@@ -16,10 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -61,6 +60,15 @@ public class HabitacionServiceImpl implements HabitacionService {
     }
 
     @Override
+    public ResponseHabitacionDTO getById(Long idHabitacion) {
+        Habitacion habitacionEncontrada = habitacionRepository.findById(idHabitacion)
+                .orElseThrow(() -> new NotFoundException("Habitacion con id" + idHabitacion + " no existe"));
+
+        return habitacionMapper.toResponseDTO(habitacionEncontrada);
+    }
+
+
+    @Override
     @Transactional
     public ResponseHabitacionDTO cambiarEstado(String numeroHabitacion, String nuevoEstado) {
 
@@ -94,12 +102,14 @@ public class HabitacionServiceImpl implements HabitacionService {
             throw new AlreadyExistsException("Ya existe una habitación con el número " + dto.numeroHabitacion());
         }
 
+        // Actualizar campos básicos
         habitacion.setNumeroHabitacion(dto.numeroHabitacion());
         habitacion.setNombreHabitacion(dto.nombreHabitacion());
         habitacion.setDescripcion(dto.descripcion());
         habitacion.setTipo(TipoHabitacion.fromNombre(dto.tipoHabitacion()));
         habitacion.setPrecio(dto.precio());
 
+        // Actualizar comodidades
         if (dto.comodidades() != null) {
             Set<Comodidad> nuevasComodidades = dto.comodidades().stream()
                     .map(Comodidad::fromNombre)
@@ -107,8 +117,17 @@ public class HabitacionServiceImpl implements HabitacionService {
             habitacion.setComodidades(nuevasComodidades);
         }
 
-        return habitacionMapper.toResponseDTO(habitacion);
+        // Reemplazar imágenes solo si llegan nuevas
+        if (dto.imagenes() != null && !dto.imagenes().isEmpty()) {
+            habitacion.setImagenes(new ArrayList<>(dto.imagenes()));
+        }
+
+        // Guardar los cambios
+        Habitacion actualizada = habitacionRepository.save(habitacion);
+
+        return habitacionMapper.toResponseDTO(actualizada);
     }
+
 
     @Override
     public void eliminarHabitacion(String numeroHabitacion) {

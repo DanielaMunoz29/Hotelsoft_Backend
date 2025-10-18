@@ -5,12 +5,22 @@ import com.proyectohotelsoft.backend.entity.User;
 import com.proyectohotelsoft.backend.repository.UserRepository;
 import com.proyectohotelsoft.backend.services.AuthService;
 import com.proyectohotelsoft.backend.services.GoogleAuthService;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
-
+import java.security.Key;
 import java.security.SecureRandom;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementación del servicio de autenticación
@@ -18,6 +28,11 @@ import java.util.Optional;
  */
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    @Value("${jwt.secret}")
+    private String secretKey;
+    @Value("${jwt.expiration}")
+    private long jwtExpiration;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -80,22 +95,31 @@ public String register(RegisterUserDTO registerUserDTO) {
 
     @Override
     public TokenDTO login(LoginUserDTO loginUserDTO) {
-        User user = userRepository.findByEmail(loginUserDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+        String s = """
+                User user = userRepository.findByEmail(loginUserDTO.getEmail())
+                        .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
 
-        if (!passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Credenciales inválidas");
-        }
+                if (!passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
+                    throw new RuntimeException("Credenciales inválidas");
+                }
 
-        if (!user.isEnabled()) {
-            throw new RuntimeException("La cuenta está deshabilitada");
-        }
+                if (!user.isEnabled()) {
+                    throw new RuntimeException("La cuenta está deshabilitada");
+                }
 
-        String accessToken = generateAccessToken(user);
-        String refreshToken = generateRefreshToken(user);
+                Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                        loginUserDTO.getEmail(),
+                        loginUserDTO.getPassword()
+                ));
+                UserDetails user = authentication.getPrincipal();
+                String accessToken = generateToken(user);
+                String refreshToken = generateRefreshToken(user);
 
-        return new TokenDTO(accessToken, refreshToken, user.getEmail(), user.getNombreCompleto());
+                return new TokenDTO(accessToken, refreshToken, user.getEmail(), user.getNombreCompleto());
+                """;
+        return null;
     }
+
 
     @Override
     public User findByEmail(String email) {
@@ -233,6 +257,32 @@ public String register(RegisterUserDTO registerUserDTO) {
      */
     private String generateAccessToken(User user) {
         return "jwt-access-token-" + user.getEmail() + "-" + System.currentTimeMillis();
+    }
+
+    public String generateToken(UserDetails userDetails, int codigoCuenta) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("codigoCuenta", codigoCuenta);
+        return buildToken(claims, userDetails, jwtExpiration);
+    }
+
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long
+            expiration) {
+        List<String> roles =
+                userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+        extraClaims.put("roles", roles);
+        return Jwts
+                .builder()
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    private Key getSignInKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     /**

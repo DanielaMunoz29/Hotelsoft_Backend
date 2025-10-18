@@ -16,6 +16,8 @@ public interface HabitacionService {
 
     ResponseHabitacionDTO getByNumero(String numeroHabitacion);
 
+    ResponseHabitacionDTO getById(Long idHabitacion);
+
     ResponseHabitacionDTO cambiarEstado(String numeroHabitacion, String nuevoEstado);
 
     ResponseHabitacionDTO editarHabitacion(String numeroHabitacion, HabitacionDTO dto);

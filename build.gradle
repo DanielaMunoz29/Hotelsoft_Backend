@@ -59,6 +59,8 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	//Cloudinary
+	implementation 'com.cloudinary:cloudinary-http44:1.37.0'
 	
 	// Testing
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

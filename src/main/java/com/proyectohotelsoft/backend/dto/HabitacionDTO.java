@@ -10,6 +10,8 @@ public record HabitacionDTO(
     String descripcion,
     String tipoHabitacion,
     double precio,
-    List<String> comodidades
+    List<String> comodidades,
+
+    List<String> imagenes
 ) {
 }
