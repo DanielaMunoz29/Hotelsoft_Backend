@@ -16,5 +16,5 @@ public interface ReservaService {
     
     void eliminarReserva(String id);
 
-    Page<ResponseReservaDTO> buscarPorIdUsuario(Long id);
+    Page<ResponseReservaDTO> buscarPorIdUsuario(Long id, Pageable pageable);
 }

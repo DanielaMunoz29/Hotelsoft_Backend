@@ -46,8 +46,8 @@ public class ReservaController {
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<Page<ResponseReservaDTO>> obtenerPorIdUsuario(@PathVariable Long id) {
-        Page<ResponseReservaDTO> reservas = reservaService.buscarPorIdUsuario(id);
+    public ResponseEntity<Page<ResponseReservaDTO>> obtenerPorIdUsuario(@PathVariable Long id, Pageable pageable) {
+        Page<ResponseReservaDTO> reservas = reservaService.buscarPorIdUsuario(id, pageable);
         return ResponseEntity.ok(reservas);
 
     }

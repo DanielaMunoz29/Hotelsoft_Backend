@@ -124,8 +124,8 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
-    public Page<ResponseReservaDTO> buscarPorIdUsuario(Long id) {
-        Page<Reserva> reservasEncontradas = reservaRepository.findAllByUserId(id);
+    public Page<ResponseReservaDTO> buscarPorIdUsuario(Long id, Pageable pageable) {
+        Page<Reserva> reservasEncontradas = reservaRepository.findAllByUserId(id, pageable);
         return reservasEncontradas.map(reserva -> {
             ResponseHabitacionDTO habitacionDTO = habitacionMapper.toResponseDTO(reserva.getHabitacion());
             return reservaMapper.toResponseDTO(reserva, habitacionDTO);

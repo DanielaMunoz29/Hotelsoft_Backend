@@ -2,6 +2,7 @@ package com.proyectohotelsoft.backend.repository;
 
 import com.proyectohotelsoft.backend.entity.Reserva;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,5 +24,5 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
                                                @Param("fechaSalida") LocalDateTime fechaSalida);
 
     @Query("SELECT r FROM Reserva r WHERE r.user.id = :id")
-    Page<Reserva> findAllByUserId(Long id);
+    Page<Reserva> findAllByUserId(Long id, Pageable pageable);
 }

@@ -60,6 +60,7 @@ public class HabitacionMapper {
                 .toList();
 
         return new ResponseHabitacionDTO(
+                habitacion.getId(),
                 habitacion.getNumeroHabitacion(),
                 habitacion.getNombreHabitacion(),
                 habitacion.getDescripcion(),

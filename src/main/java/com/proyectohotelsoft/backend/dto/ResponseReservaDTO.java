@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 public record ResponseReservaDTO(
 
+        Long idReserva,
         String nombreTitular,
         String email,
         String telefono,

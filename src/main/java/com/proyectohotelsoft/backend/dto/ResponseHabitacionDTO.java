@@ -4,6 +4,7 @@ import java.util.List;
 
 public record ResponseHabitacionDTO (
 
+    Long idHabitacion,
     String numeroHabitacion,
     String nombreHabitacion,
     String descripcion,

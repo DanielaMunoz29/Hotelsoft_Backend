@@ -44,6 +44,7 @@ public class ReservaMapper {
         }
 
         return new ResponseReservaDTO(
+            reserva.getId(),
             reserva.getNombreTitular(),
             reserva.getEmail(),
             reserva.getTelefono(),

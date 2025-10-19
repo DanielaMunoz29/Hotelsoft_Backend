@@ -20,11 +20,6 @@ import java.util.*;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    @Value("${jwt.secret}")
-    private String secretKey;
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final GoogleAuthService googleAuthService;

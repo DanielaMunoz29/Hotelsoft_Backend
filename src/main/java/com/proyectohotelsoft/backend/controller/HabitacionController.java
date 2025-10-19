@@ -86,7 +86,7 @@ public class HabitacionController {
         return ResponseEntity.ok(habitacion);
     }
 
-    @GetMapping
+    @GetMapping("/filter")
     public ResponseEntity<Page<ResponseHabitacionDTO>> buscarHabitaciones(
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String estado,
