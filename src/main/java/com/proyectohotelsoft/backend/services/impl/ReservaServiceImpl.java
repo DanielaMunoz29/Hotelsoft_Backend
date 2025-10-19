@@ -6,6 +6,7 @@ import com.proyectohotelsoft.backend.dto.ResponseHabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ResponseReservaDTO;
 import com.proyectohotelsoft.backend.entity.Habitacion;
 import com.proyectohotelsoft.backend.entity.Reserva;
+import com.proyectohotelsoft.backend.entity.User;
 import com.proyectohotelsoft.backend.entity.enums.EstadoReserva;
 import com.proyectohotelsoft.backend.exceptions.AlreadyExistsException;
 import com.proyectohotelsoft.backend.exceptions.NotFoundException;
@@ -13,6 +14,7 @@ import com.proyectohotelsoft.backend.mappers.HabitacionMapper;
 import com.proyectohotelsoft.backend.mappers.ReservaMapper;
 import com.proyectohotelsoft.backend.repository.HabitacionRepository;
 import com.proyectohotelsoft.backend.repository.ReservaRepository;
+import com.proyectohotelsoft.backend.repository.UserRepository;
 import com.proyectohotelsoft.backend.services.ReservaService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -42,13 +44,18 @@ public class ReservaServiceImpl implements ReservaService {
     @Autowired
     private final HabitacionMapper habitacionMapper;
 
+    private final UserRepository userRepository;
+
 
     @Override
     @Transactional
     public ResponseReservaDTO crearReserva(ReservaDTO reservaDTO) {
 
         Habitacion habitacionEncontrada = habitacionRepository.findById(reservaDTO.idHabitacion())
-                        .orElseThrow(() -> new NotFoundException("Habitacion con id " +reservaDTO.idHabitacion()+ " no existe"));
+                .orElseThrow(() -> new NotFoundException("Habitacion con id " + reservaDTO.idHabitacion() + " no existe"));
+
+        User userEncontrado = userRepository.findById(reservaDTO.idUsuario())
+                .orElseThrow(() -> new NotFoundException("Usuario con id" + reservaDTO.idUsuario() + " no existe"));
 
 
         //Validar disponibilidad de la habitación en las fechas solicitadas
@@ -71,6 +78,7 @@ public class ReservaServiceImpl implements ReservaService {
 
         //Crear la nueva reserva usando el mapper
         Reserva reserva = ReservaMapper.toEntity(reservaDTO, habitacionEncontrada);
+        reserva.setUser(userEncontrado);
         reserva.setPrecioTotal(precioTotal);
 
         //Guardar la reserva
@@ -113,5 +121,14 @@ public class ReservaServiceImpl implements ReservaService {
         reserva.setEstado(EstadoReserva.CANCELADO);
         reservaRepository.save(reserva);
 
+    }
+
+    @Override
+    public Page<ResponseReservaDTO> buscarPorIdUsuario(Long id) {
+        Page<Reserva> reservasEncontradas = reservaRepository.findAllByUserId(id);
+        return reservasEncontradas.map(reserva -> {
+            ResponseHabitacionDTO habitacionDTO = habitacionMapper.toResponseDTO(reserva.getHabitacion());
+            return reservaMapper.toResponseDTO(reserva, habitacionDTO);
+        });
     }
 }

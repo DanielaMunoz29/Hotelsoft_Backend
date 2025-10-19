@@ -5,11 +5,19 @@ import com.proyectohotelsoft.backend.dto.ResponseHabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ResponseReservaDTO;
 import com.proyectohotelsoft.backend.entity.Habitacion;
 import com.proyectohotelsoft.backend.entity.Reserva;
+import com.proyectohotelsoft.backend.entity.User;
 import com.proyectohotelsoft.backend.entity.enums.EstadoReserva;
+import com.proyectohotelsoft.backend.exceptions.NotFoundException;
+import com.proyectohotelsoft.backend.repository.UserRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class ReservaMapper {
+
+
+    private final UserRepository userRepository;
 
     // ReservaDTO -> Reserva (para crear una nueva reserva)
     public static Reserva toEntity(ReservaDTO dto, Habitacion habitacion) {

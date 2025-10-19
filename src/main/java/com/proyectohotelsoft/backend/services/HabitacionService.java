@@ -6,6 +6,7 @@ import com.proyectohotelsoft.backend.entity.Habitacion;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface HabitacionService {
@@ -24,7 +25,13 @@ public interface HabitacionService {
 
     void eliminarHabitacion(String numeroHabitacion);
 
-    Page<ResponseHabitacionDTO> getByTipo(String tipo, Pageable pageable);
+    Page<ResponseHabitacionDTO> buscarHabitaciones(
+            String tipo,
+            String estado,
+            LocalDateTime fechaEntrada,
+            LocalDateTime fechaSalida,
+            Pageable pageable
+    );
 
     Page<ResponseHabitacionDTO> getByEstado(String estado, Pageable pageable);
 }

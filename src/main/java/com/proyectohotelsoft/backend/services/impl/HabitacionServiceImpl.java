@@ -10,6 +10,7 @@ import com.proyectohotelsoft.backend.exceptions.AlreadyExistsException;
 import com.proyectohotelsoft.backend.exceptions.NotFoundException;
 import com.proyectohotelsoft.backend.mappers.HabitacionMapper;
 import com.proyectohotelsoft.backend.repository.HabitacionRepository;
+import com.proyectohotelsoft.backend.repository.ReservaRepository;
 import com.proyectohotelsoft.backend.services.HabitacionService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,6 +35,8 @@ public class HabitacionServiceImpl implements HabitacionService {
 
     @Autowired
     private final HabitacionMapper habitacionMapper;
+
+    private final ReservaRepository reservaRepository;
 
     @Override
     @Transactional
@@ -139,16 +144,56 @@ public class HabitacionServiceImpl implements HabitacionService {
     }
 
     @Override
-    public Page<ResponseHabitacionDTO> getByTipo(String tipo, Pageable pageable) {
-        try {
-            TipoHabitacion tipoEnum = TipoHabitacion.fromNombre(tipo);
-            return habitacionRepository.findByTipo(tipoEnum, pageable)
-                    .map(habitacionMapper::toResponseDTO);
-        } catch (Exception e) {
-            throw new NotFoundException("Tipo invalido: " + tipo);
+    @Transactional
+    public Page<ResponseHabitacionDTO> buscarHabitaciones(
+            String tipo,
+            String estado,
+            LocalDateTime fechaEntrada,
+            LocalDateTime fechaSalida,
+            Pageable pageable
+    ) {
+        TipoHabitacion tipoEnum = null;
+        EstadoHabitacion estadoEnum = null;
+
+        // Intentar convertir tipo y estado (si vienen)
+        if (tipo != null && !tipo.isBlank()) {
+            try {
+                tipoEnum = TipoHabitacion.fromNombre(tipo);
+            } catch (IllegalArgumentException e) {
+                throw new NotFoundException("Tipo de habitación inválido: " + tipo);
+            }
         }
 
+        if (estado != null && !estado.isBlank()) {
+            try {
+                estadoEnum = EstadoHabitacion.fromNombre(estado);
+            } catch (IllegalArgumentException e) {
+                throw new NotFoundException("Estado de habitación inválido: " + estado);
+            }
+        }
+
+        // Si no hay fechas, aplicar solo los filtros de tipo/estado
+        if (fechaEntrada == null || fechaSalida == null) {
+            return habitacionRepository
+                    .filtrarPorTipoYEstado(tipoEnum, estadoEnum, pageable)
+                    .map(habitacionMapper::toResponseDTO);
+        }
+
+        // Validar fechas
+        if (fechaSalida.isBefore(fechaEntrada)) {
+            throw new IllegalArgumentException("La fecha de salida no puede ser anterior a la fecha de entrada.");
+        }
+
+        // Buscar habitaciones ocupadas en ese rango
+        List<Long> habitacionesOcupadasIds =
+                reservaRepository.findHabitacionesOcupadasEnRango(fechaEntrada, fechaSalida);
+
+        // Buscar habitaciones disponibles aplicando los filtros
+        return habitacionRepository
+                .filtrarDisponiblesPorTipoEstadoYFechas(tipoEnum, estadoEnum, habitacionesOcupadasIds, pageable)
+                .map(habitacionMapper::toResponseDTO);
     }
+
 
     @Override
     public Page<ResponseHabitacionDTO> getByEstado(String estado, Pageable pageable) {

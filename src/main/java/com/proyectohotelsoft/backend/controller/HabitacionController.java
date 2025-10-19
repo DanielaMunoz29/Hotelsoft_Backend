@@ -9,12 +9,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +86,20 @@ public class HabitacionController {
         return ResponseEntity.ok(habitacion);
     }
 
+    @GetMapping
+    public ResponseEntity<Page<ResponseHabitacionDTO>> buscarHabitaciones(
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaEntrada,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaSalida,
+            Pageable pageable
+    ) {
+        Page<ResponseHabitacionDTO> habitaciones =
+                habitacionService.buscarHabitaciones(tipo, estado, fechaEntrada, fechaSalida, pageable);
+        return ResponseEntity.ok(habitaciones);
+    }
+
+    /*
     @GetMapping("/tipo/{tipo}")
     public ResponseEntity<Page<ResponseHabitacionDTO>> getByTipo(
             @PathVariable String tipo,
@@ -92,6 +108,7 @@ public class HabitacionController {
         Page<ResponseHabitacionDTO> habitaciones = habitacionService.getByTipo(tipo, pageable);
         return ResponseEntity.ok(habitaciones);
     }
+    */
 
     @GetMapping("/estado/{estado}")
     public ResponseEntity<Page<ResponseHabitacionDTO>> getByEstado(

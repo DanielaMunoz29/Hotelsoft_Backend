@@ -1,14 +1,24 @@
 package com.proyectohotelsoft.backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Entidad que representa un usuario en el sistema
  */
 @Entity
 @Table(name = "users")
+@Data
+@Getter
+@Setter
 public class User {
-    
+
+    // Getters y Setters para campos existentes
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -42,6 +52,10 @@ public class User {
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reserva> reservas = new ArrayList<>();
+
+
     // Constructores
     public User() {}
     
@@ -56,39 +70,4 @@ public class User {
         this.twoFactorEnabled = false;
         this.emailVerified = false;
     }
-    
-    // Getters y Setters para campos existentes
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-    
-    public String getNombreCompleto() { return nombreCompleto; }
-    public void setNombreCompleto(String nombreCompleto) { this.nombreCompleto = nombreCompleto; }
-    
-    public String getCedula() { return cedula; }
-    public void setCedula(String cedula) { this.cedula = cedula; }
-    
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
-    
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
-    
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    
-    // GETTERS Y SETTERS PARA CAMPOS NUEVOS - AGREGAR ESTOS
-    public String getGoogleId() { return googleId; }
-    public void setGoogleId(String googleId) { this.googleId = googleId; }
-    
-    public boolean isTwoFactorEnabled() { return twoFactorEnabled; }
-    public void setTwoFactorEnabled(boolean twoFactorEnabled) { this.twoFactorEnabled = twoFactorEnabled; }
-    
-    public boolean isEmailVerified() { return emailVerified; }
-    public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
 }

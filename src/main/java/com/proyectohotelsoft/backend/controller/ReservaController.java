@@ -44,4 +44,11 @@ public class ReservaController {
         reservaService.eliminarReserva(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<Page<ResponseReservaDTO>> obtenerPorIdUsuario(@PathVariable Long id) {
+        Page<ResponseReservaDTO> reservas = reservaService.buscarPorIdUsuario(id);
+        return ResponseEntity.ok(reservas);
+
+    }
 }
