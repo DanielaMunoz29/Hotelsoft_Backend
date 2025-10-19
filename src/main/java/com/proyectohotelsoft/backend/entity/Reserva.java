@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "reservas")
@@ -45,7 +43,7 @@ public class Reserva {
     @Enumerated(EnumType.STRING)
     private EstadoReserva estado;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "habitacion_id", referencedColumnName = "id")
     private Habitacion habitacion;
 

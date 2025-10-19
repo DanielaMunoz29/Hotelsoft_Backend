@@ -18,7 +18,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
     @Query("""
             SELECT DISTINCT r.habitacion.id FROM Reserva r
-            WHERE r.fechaEntrada < :fechaSalida AND r.fechaSalida > :fechaEntrada
+            WHERE r.fechaEntrada < :fechaSalida AND r.fechaSalida > :fechaEntrada AND r.estado = 'CONFIRMADO'
             """)
     List<Long> findHabitacionesOcupadasEnRango(@Param("fechaEntrada") LocalDateTime fechaEntrada,
                                                @Param("fechaSalida") LocalDateTime fechaSalida);

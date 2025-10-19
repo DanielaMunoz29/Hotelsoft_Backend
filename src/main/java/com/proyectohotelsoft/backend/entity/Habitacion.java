@@ -61,7 +61,7 @@ public class Habitacion {
     @OrderColumn(name = "orden")
     private List<String> imagenes = new ArrayList<>();
 
-    @OneToOne(mappedBy = "habitacion", cascade = CascadeType.ALL)
-    private Reserva reserva;
+    @OneToMany(mappedBy = "habitacion", cascade = CascadeType.ALL)
+    private List<Reserva> reserva;
 
 }
