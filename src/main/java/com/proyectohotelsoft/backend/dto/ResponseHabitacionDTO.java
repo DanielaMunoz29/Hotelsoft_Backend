@@ -9,7 +9,7 @@ public record ResponseHabitacionDTO (
     String descripcion,
     String tipoHabitacion,
     String estadoHabitacion,
-    String precio,
+    double precio,
     boolean enabled,
     List<String> comodidades,
     List<String> imagenes

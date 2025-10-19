@@ -5,22 +5,13 @@ import com.proyectohotelsoft.backend.entity.User;
 import com.proyectohotelsoft.backend.repository.UserRepository;
 import com.proyectohotelsoft.backend.services.AuthService;
 import com.proyectohotelsoft.backend.services.GoogleAuthService;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
+import com.proyectohotelsoft.backend.utils.JWTUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
-import java.security.Key;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Implementación del servicio de autenticación
@@ -38,18 +29,21 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final GoogleAuthService googleAuthService;
 
+    private final JWTUtils jwtUtils;
+
     /**
      * Constructor para inyección de dependencias
-     * 
+     *
      * @param userRepository    Repositorio de usuarios
      * @param passwordEncoder   Codificador de contraseñas
      * @param googleAuthService Servicio de autenticación con Google
      */
     public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            GoogleAuthService googleAuthService) {
+                           GoogleAuthService googleAuthService, JWTUtils jwtUtils) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.googleAuthService = googleAuthService;
+        this.jwtUtils = jwtUtils;
     }
 
     /**
@@ -61,63 +55,58 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-public String register(RegisterUserDTO registerUserDTO) {
-    if (userRepository.findByEmail(registerUserDTO.getEmail()).isPresent()) {
-        throw new RuntimeException("El usuario con este email ya está registrado");
-    }
-
-    try {
-        User newUser = new User(
-            registerUserDTO.getEmail(),
-            passwordEncoder.encode(registerUserDTO.getPassword()),
-            registerUserDTO.getNombreCompleto(), 
-            registerUserDTO.getCedula(),
-            registerUserDTO.getTelefono(),
-            "USER"
-        );
-
-        userRepository.save(newUser);
-       
-        Optional<User> savedUser = userRepository.findByEmail(registerUserDTO.getEmail());
-        if (savedUser.isPresent()) {
-            System.out.println("Usuario registrado correctamente: " + registerUserDTO.getEmail());
-            return "Usuario registrado exitosamente";
-        } else {
-            throw new RuntimeException("Error al guardar el usuario en la base de datos");
+    public String register(RegisterUserDTO registerUserDTO) {
+        if (userRepository.findByEmail(registerUserDTO.getEmail()).isPresent()) {
+            throw new RuntimeException("El usuario con este email ya está registrado");
         }
-        
-    } catch (Exception e) {
-        System.out.println("Error en registro: " + e.getMessage());
-        e.printStackTrace();
-        throw new RuntimeException("Error durante el registro: " + e.getMessage());
+
+        try {
+            User newUser = new User(
+                    registerUserDTO.getEmail(),
+                    passwordEncoder.encode(registerUserDTO.getPassword()),
+                    registerUserDTO.getNombreCompleto(),
+                    registerUserDTO.getCedula(),
+                    registerUserDTO.getTelefono(),
+                    "USER"
+            );
+
+            userRepository.save(newUser);
+
+            Optional<User> savedUser = userRepository.findByEmail(registerUserDTO.getEmail());
+            if (savedUser.isPresent()) {
+                System.out.println("Usuario registrado correctamente: " + registerUserDTO.getEmail());
+                return "Usuario registrado exitosamente";
+            } else {
+                throw new RuntimeException("Error al guardar el usuario en la base de datos");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error en registro: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error durante el registro: " + e.getMessage());
+        }
     }
-}
 
     @Override
     public TokenDTO login(LoginUserDTO loginUserDTO) {
-        String s = """
-                User user = userRepository.findByEmail(loginUserDTO.getEmail())
-                        .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
 
-                if (!passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
-                    throw new RuntimeException("Credenciales inválidas");
-                }
+        User user = userRepository.findByEmail(loginUserDTO.getEmail())
+                .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
 
-                if (!user.isEnabled()) {
-                    throw new RuntimeException("La cuenta está deshabilitada");
-                }
+        if (!passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Credenciales inválidas");
+        }
 
-                Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                        loginUserDTO.getEmail(),
-                        loginUserDTO.getPassword()
-                ));
-                UserDetails user = authentication.getPrincipal();
-                String accessToken = generateToken(user);
-                String refreshToken = generateRefreshToken(user);
+        if (!user.isEnabled()) {
+            throw new RuntimeException("La cuenta está deshabilitada");
+        }
 
-                return new TokenDTO(accessToken, refreshToken, user.getEmail(), user.getNombreCompleto());
-                """;
-        return null;
+        String accessToken = jwtUtils.generarToken(user.getEmail(),Map.of("idUsuario", user.getId(),
+                                                                          "nombre", user.getNombreCompleto(),
+                                                                          "role", user.getRole()));
+        String refreshToken = generateRefreshToken(user);
+
+        return new TokenDTO(accessToken, refreshToken, user.getEmail(), user.getNombreCompleto());
     }
 
 
@@ -171,7 +160,9 @@ public String register(RegisterUserDTO registerUserDTO) {
             GoogleAuthService.GoogleUserInfo googleUserInfo = googleAuthService.verifyGoogleToken(googleToken);
             User user = findOrCreateUserFromGoogle(googleUserInfo);
 
-            String accessToken = generateAccessToken(user);
+            String accessToken = jwtUtils.generarToken(user.getEmail(),Map.of("idUsuario", user.getId(),
+                                                                              "nombre", user.getNombreCompleto(),
+                                                                              "role", user.getRole()));
             String refreshToken = generateRefreshToken(user);
 
             return new TokenDTO(accessToken, refreshToken, user.getEmail(), user.getNombreCompleto());
@@ -184,7 +175,7 @@ public String register(RegisterUserDTO registerUserDTO) {
     /**
      * Busca un usuario existente por email o crea uno nuevo a partir de información
      * de Google
-     * 
+     *
      * @param googleUserInfo Información validada del usuario de Google
      * @return Usuario existente o nuevo
      */
@@ -216,7 +207,7 @@ public String register(RegisterUserDTO registerUserDTO) {
 
     /**
      * Genera una contraseña segura aleatoria para usuarios registrados via Google
-     * 
+     *
      * @return Contraseña aleatoria segura
      */
     private String generateSecureRandomPassword() {
@@ -251,7 +242,7 @@ public String register(RegisterUserDTO registerUserDTO) {
 
     /**
      * Genera un token de acceso JWT para el usuario
-     * 
+     *
      * @param user Usuario para el cual generar el token
      * @return Token de acceso JWT
      */
@@ -259,35 +250,9 @@ public String register(RegisterUserDTO registerUserDTO) {
         return "jwt-access-token-" + user.getEmail() + "-" + System.currentTimeMillis();
     }
 
-    public String generateToken(UserDetails userDetails, int codigoCuenta) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("codigoCuenta", codigoCuenta);
-        return buildToken(claims, userDetails, jwtExpiration);
-    }
-
-    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long
-            expiration) {
-        List<String> roles =
-                userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
-        extraClaims.put("roles", roles);
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
     /**
      * Genera un token de refresco JWT para el usuario
-     * 
+     *
      * @param user Usuario para el cual generar el token
      * @return Token de refresco JWT
      */
@@ -297,7 +262,7 @@ public String register(RegisterUserDTO registerUserDTO) {
 
     /**
      * Genera token de recuperación de contraseña
-     * 
+     *
      * @param user Usuario para el cual generar el token
      * @return Token de recuperación
      */
@@ -307,7 +272,7 @@ public String register(RegisterUserDTO registerUserDTO) {
 
     /**
      * Valida código de autenticación de dos factores
-     * 
+     *
      * @param user Usuario a validar
      * @param code Código de autenticación
      * @return true si el código es válido, false en caso contrario

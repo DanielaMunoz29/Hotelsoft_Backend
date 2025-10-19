@@ -7,7 +7,6 @@ import com.proyectohotelsoft.backend.entity.enums.Comodidad;
 import com.proyectohotelsoft.backend.entity.enums.EstadoHabitacion;
 import com.proyectohotelsoft.backend.entity.enums.TipoHabitacion;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,7 +25,7 @@ public class HabitacionMapper {
         habitacion.setDescripcion(dto.descripcion());
         habitacion.setPrecio(dto.precio());
 
-        // Los enums se convierten desde String (asegúrate de que los nombres coincidan)
+        // Los enums se convierten desde String
         habitacion.setTipo(TipoHabitacion.valueOf(dto.tipoHabitacion().toUpperCase()));
 
         // Estado por defecto al crear (si no viene del DTO)
@@ -65,8 +64,8 @@ public class HabitacionMapper {
                 habitacion.getNombreHabitacion(),
                 habitacion.getDescripcion(),
                 habitacion.getTipo().name(),     // devuelve el nombre del enum como String
-                habitacion.getEstado().name(),   // idem
-                String.format("%.2f", habitacion.getPrecio()), // lo pasas a String con 2 decimales
+                habitacion.getEstado().name(),
+                habitacion.getPrecio(),
                 habitacion.isEnabled(),
                 comodidadesString,
                 habitacion.getImagenes()

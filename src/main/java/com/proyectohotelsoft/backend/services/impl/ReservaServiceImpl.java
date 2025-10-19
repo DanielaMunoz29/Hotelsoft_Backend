@@ -47,15 +47,12 @@ public class ReservaServiceImpl implements ReservaService {
     @Transactional
     public ResponseReservaDTO crearReserva(ReservaDTO reservaDTO) {
 
-        Optional<Habitacion> habitacion = habitacionRepository.findByNumeroHabitacion(reservaDTO.habitacion().numeroHabitacion());
-        if (habitacion.isEmpty()) {
-            throw new NotFoundException("Habitacion numero " + reservaDTO.habitacion().numeroHabitacion() + " no existe");
-        }
+        Habitacion habitacionEncontrada = habitacionRepository.findById(reservaDTO.idHabitacion())
+                        .orElseThrow(() -> new NotFoundException("Habitacion con id " +reservaDTO.idHabitacion()+ " no existe"));
 
-        Long habitacionId = habitacion.get().getId();
 
         //Validar disponibilidad de la habitación en las fechas solicitadas
-        List<Reserva> reservasExistentes = reservaRepository.findByHabitacionId(habitacionId);
+        List<Reserva> reservasExistentes = reservaRepository.findByHabitacionId(habitacionEncontrada.getId());
         boolean ocupada = reservasExistentes.stream().anyMatch(r ->
                 r.getFechaEntrada().isBefore(reservaDTO.fechaSalida()) &&
                         r.getFechaSalida().isAfter(reservaDTO.fechaEntrada())
@@ -64,14 +61,23 @@ public class ReservaServiceImpl implements ReservaService {
             throw new IllegalStateException("La habitación está ocupada en las fechas seleccionadas.");
         }
 
+        long noches = ChronoUnit.DAYS.between(reservaDTO.fechaEntrada(), reservaDTO.fechaSalida());
+        if (noches <= 0) {
+            throw new IllegalArgumentException("La fecha de salida debe ser posterior a la fecha de entrada.");
+        }
+
+        // Calcular precio total
+        double precioTotal = noches * habitacionEncontrada.getPrecio();
+
         //Crear la nueva reserva usando el mapper
-        Reserva reserva = ReservaMapper.toEntity(reservaDTO, habitacion.get());
+        Reserva reserva = ReservaMapper.toEntity(reservaDTO, habitacionEncontrada);
+        reserva.setPrecioTotal(precioTotal);
 
         //Guardar la reserva
         Reserva reservaGuardada = reservaRepository.save(reserva);
 
         //Convertir a ResponseReservaDTO
-        ResponseHabitacionDTO habitacionDTO = habitacionMapper.toResponseDTO(habitacion.get());
+        ResponseHabitacionDTO habitacionDTO = habitacionMapper.toResponseDTO(habitacionEncontrada);
         return reservaMapper.toResponseDTO(reservaGuardada, habitacionDTO);
     }
 

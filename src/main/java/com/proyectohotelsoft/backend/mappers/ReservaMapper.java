@@ -23,9 +23,8 @@ public class ReservaMapper {
         reserva.setTelefono(dto.telefono());
         reserva.setFechaEntrada(dto.fechaEntrada());
         reserva.setFechaSalida(dto.fechaSalida());
-        reserva.setPrecioTotal(dto.precioTotal());
         reserva.setHabitacion(habitacion);
-        reserva.setEstado(EstadoReserva.PENDIENTE); // por defecto o según tu lógica
+        reserva.setEstado(EstadoReserva.CONFIRMADO); // por defecto o según tu lógica
 
         return reserva;
     }
