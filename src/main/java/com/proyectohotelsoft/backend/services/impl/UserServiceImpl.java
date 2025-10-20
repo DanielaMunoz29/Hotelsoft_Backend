@@ -70,6 +70,7 @@ public class UserServiceImpl implements UserService {
                 registerUserDTO.getTelefono(),
                 "USER" // Rol por defecto
         );
+        user.setPuntos(0);
 
         return userRepository.save(user);
     }
@@ -342,6 +343,7 @@ public class UserServiceImpl implements UserService {
         userDTO.setTelefono(user.getTelefono());
         userDTO.setRole(user.getRole());
         userDTO.setEnabled(user.isEnabled());
+        userDTO.setPuntos(user.getPuntos());
         return userDTO;
     }
 

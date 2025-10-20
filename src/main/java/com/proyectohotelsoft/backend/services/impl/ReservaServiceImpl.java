@@ -1,6 +1,5 @@
 package com.proyectohotelsoft.backend.services.impl;
 
-import com.proyectohotelsoft.backend.dto.HabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ReservaDTO;
 import com.proyectohotelsoft.backend.dto.ResponseHabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ResponseReservaDTO;
@@ -8,7 +7,7 @@ import com.proyectohotelsoft.backend.entity.Habitacion;
 import com.proyectohotelsoft.backend.entity.Reserva;
 import com.proyectohotelsoft.backend.entity.User;
 import com.proyectohotelsoft.backend.entity.enums.EstadoReserva;
-import com.proyectohotelsoft.backend.exceptions.AlreadyExistsException;
+import com.proyectohotelsoft.backend.entity.enums.TipoHabitacion;
 import com.proyectohotelsoft.backend.exceptions.NotFoundException;
 import com.proyectohotelsoft.backend.mappers.HabitacionMapper;
 import com.proyectohotelsoft.backend.mappers.ReservaMapper;
@@ -18,7 +17,6 @@ import com.proyectohotelsoft.backend.repository.UserRepository;
 import com.proyectohotelsoft.backend.services.ReservaService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -49,7 +46,9 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     @Transactional
-    public ResponseReservaDTO crearReserva(ReservaDTO reservaDTO) {
+    public ResponseReservaDTO crearReserva(ReservaDTO reservaDTO, boolean puntos) {
+
+        double precioTotal = 0;
 
         Habitacion habitacionEncontrada = habitacionRepository.findById(reservaDTO.idHabitacion())
                 .orElseThrow(() -> new NotFoundException("Habitacion con id " + reservaDTO.idHabitacion() + " no existe"));
@@ -73,13 +72,28 @@ public class ReservaServiceImpl implements ReservaService {
             throw new IllegalArgumentException("La fecha de salida debe ser posterior a la fecha de entrada.");
         }
 
-        // Calcular precio total
-        double precioTotal = noches * habitacionEncontrada.getPrecio();
+        //calcular total
+        int puntosExistentes = userEncontrado.getPuntos();
+        double precioBase = noches * habitacionEncontrada.getPrecio();
+        double descuento = puntosExistentes * 1000;
+        int puntosRestantes = puntosExistentes - ((int) (precioBase / 1000)); // para saber cuantos puntos se le quitan al usuario en la compra
+
+        if (puntos){
+            precioTotal = precioBase - descuento;
+            userEncontrado.setPuntos(puntosRestantes);
+        } else {
+            precioTotal = precioBase;
+        }
 
         //Crear la nueva reserva usando el mapper
         Reserva reserva = ReservaMapper.toEntity(reservaDTO, habitacionEncontrada);
         reserva.setUser(userEncontrado);
         reserva.setPrecioTotal(precioTotal);
+
+        //Calcular puntos otorgados por la reserva
+        TipoHabitacion tipo = habitacionEncontrada.getTipo();
+        int puntosOtorgados  = calcularPuntos(noches, puntosRestantes, tipo);
+        userEncontrado.setPuntos(puntosOtorgados);
 
         //Guardar la reserva
         Reserva reservaGuardada = reservaRepository.save(reserva);
@@ -87,6 +101,18 @@ public class ReservaServiceImpl implements ReservaService {
         //Convertir a ResponseReservaDTO
         ResponseHabitacionDTO habitacionDTO = habitacionMapper.toResponseDTO(habitacionEncontrada);
         return reservaMapper.toResponseDTO(reservaGuardada, habitacionDTO);
+    }
+
+    private int calcularPuntos(long noches, int puntosRestantes, TipoHabitacion tipo) {
+
+        int puntos = 0;
+        switch (tipo){
+            case DOBLE -> puntos = puntosRestantes + (2*(int)noches);
+            case FAMILIAR -> puntos = puntosRestantes + (3*(int)noches);
+            case SENCILLA -> puntos = puntosRestantes + (int)noches;
+            case SUITE -> puntos = puntosRestantes + (4*(int)noches);
+        }
+        return puntos;
     }
 
     @Override

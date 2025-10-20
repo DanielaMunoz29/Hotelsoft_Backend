@@ -21,9 +21,9 @@ public class ReservaController {
     private final ReservaService reservaService;
 
 
-    @PostMapping
-    public ResponseEntity<ResponseReservaDTO> crearReserva(@RequestBody ReservaDTO reservaDTO) {
-        ResponseReservaDTO reservaCreada = reservaService.crearReserva(reservaDTO);
+    @PostMapping("/{punto}")
+    public ResponseEntity<ResponseReservaDTO> crearReserva(@RequestBody ReservaDTO reservaDTO, @RequestParam boolean puntos) {
+        ResponseReservaDTO reservaCreada = reservaService.crearReserva(reservaDTO, puntos);
         return ResponseEntity.status(HttpStatus.CREATED).body(reservaCreada);
     }
 

@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface ReservaService {
 
-    ResponseReservaDTO crearReserva(ReservaDTO reservaDTO);
+    ResponseReservaDTO crearReserva(ReservaDTO reservaDTO, boolean puntos);
 
     Page<ResponseReservaDTO> listarReservas(Pageable pageable);
 

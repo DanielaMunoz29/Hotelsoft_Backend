@@ -39,6 +39,9 @@ public class User {
     
     private String role;
     
+    @Column(nullable = false)
+    private int puntos;
+
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;
     

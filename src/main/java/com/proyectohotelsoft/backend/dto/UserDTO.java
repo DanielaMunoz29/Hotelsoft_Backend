@@ -17,11 +17,15 @@ public class UserDTO {
     private String role;
     private boolean enabled;
 
+    private int puntos;
+
     // Constructores
-    public UserDTO() {}
+    public UserDTO(int puntos) {
+        this.puntos = puntos;
+    }
     
-    public UserDTO(Long id, String email, String nombreCompleto, 
-                   String cedula, String telefono, String role, boolean enabled) {
+    public UserDTO(Long id, String email, String nombreCompleto,
+                   String cedula, String telefono, String role, boolean enabled, int puntos) {
         this.id = id;
         this.email = email;
         this.nombreCompleto = nombreCompleto;
@@ -29,6 +33,7 @@ public class UserDTO {
         this.telefono = telefono;
         this.role = role;
         this.enabled = enabled;
+        this.puntos = puntos;
     }
 
     // Getters y Setters
@@ -52,4 +57,12 @@ public class UserDTO {
     
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+    public int getPuntos() {
+        return puntos;
+    }
+
+    public void setPuntos(int puntos) {
+        this.puntos = puntos;
+    }
 }
