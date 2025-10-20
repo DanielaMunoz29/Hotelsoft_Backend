@@ -51,7 +51,7 @@ public class SecurityConfig {
                 //  --PROTEGIDOS-- //
                 .requestMatchers("/api/habitaciones/crearHabitacion").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/habitaciones/{numeroHabitacion}").authenticated()
-                .requestMatchers(HttpMethod.GET, "/api/habitaciones/estado/{estado}").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/habitaciones/estado/{estado}").permitAll()
                 .requestMatchers(HttpMethod.PATCH, "/api/habitaciones/{numeroHabitacion}/estado").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/habitaciones/{numeroHabitacion}").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/habitaciones/{numeroHabitacion}").authenticated()
