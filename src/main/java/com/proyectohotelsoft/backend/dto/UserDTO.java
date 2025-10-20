@@ -1,5 +1,7 @@
 package com.proyectohotelsoft.backend.dto;
 
+import lombok.NoArgsConstructor;
+
 /**
  * DTO para transferencia de datos de usuario
  * 
@@ -8,6 +10,7 @@ package com.proyectohotelsoft.backend.dto;
  * - Actualizar información de usuario
  * - Listar usuarios en el sistema
  */
+@NoArgsConstructor
 public class UserDTO {
     private Long id;
     private String email;
@@ -18,11 +21,6 @@ public class UserDTO {
     private boolean enabled;
 
     private int puntos;
-
-    // Constructores
-    public UserDTO(int puntos) {
-        this.puntos = puntos;
-    }
     
     public UserDTO(Long id, String email, String nombreCompleto,
                    String cedula, String telefono, String role, boolean enabled, int puntos) {
