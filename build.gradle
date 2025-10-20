@@ -54,6 +54,7 @@ dependencies {
 	
 	// Base de datos
 	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'org.postgresql:postgresql'
 	
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
@@ -68,6 +69,8 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+/*
 tasks.named('test') {
 	useJUnitPlatform()
 }
+*/
