@@ -48,59 +48,71 @@ public class ReservaServiceImpl implements ReservaService {
     @Transactional
     public ResponseReservaDTO crearReserva(ReservaDTO reservaDTO, boolean puntos) {
 
-        double precioTotal = 0;
+        try {
 
-        Habitacion habitacionEncontrada = habitacionRepository.findById(reservaDTO.idHabitacion())
-                .orElseThrow(() -> new NotFoundException("Habitacion con id " + reservaDTO.idHabitacion() + " no existe"));
+            double precioTotal = 0;
 
-        User userEncontrado = userRepository.findById(reservaDTO.idUsuario())
-                .orElseThrow(() -> new NotFoundException("Usuario con id" + reservaDTO.idUsuario() + " no existe"));
+            Habitacion habitacionEncontrada = habitacionRepository.findById(reservaDTO.idHabitacion())
+                    .orElseThrow(() -> new NotFoundException("Habitacion con id " + reservaDTO.idHabitacion() + " no existe"));
+
+            User userEncontrado = userRepository.findById(reservaDTO.idUsuario())
+                    .orElseThrow(() -> new NotFoundException("Usuario con id" + reservaDTO.idUsuario() + " no existe"));
 
 
-        //Validar disponibilidad de la habitación en las fechas solicitadas
-        List<Reserva> reservasExistentes = reservaRepository.findByHabitacionId(habitacionEncontrada.getId());
-        boolean ocupada = reservasExistentes.stream().anyMatch(r ->
-                r.getFechaEntrada().isBefore(reservaDTO.fechaSalida()) &&
-                        r.getFechaSalida().isAfter(reservaDTO.fechaEntrada())
-        );
-        if (ocupada) {
-            throw new IllegalStateException("La habitación está ocupada en las fechas seleccionadas.");
+            //Validar disponibilidad de la habitación en las fechas solicitadas
+            List<Reserva> reservasExistentes = reservaRepository.findByHabitacionId(habitacionEncontrada.getId());
+            boolean ocupada = reservasExistentes.stream().anyMatch(r ->
+                    r.getFechaEntrada().isBefore(reservaDTO.fechaSalida()) &&
+                            r.getFechaSalida().isAfter(reservaDTO.fechaEntrada())
+            );
+            if (ocupada) {
+                throw new IllegalStateException("La habitación está ocupada en las fechas seleccionadas.");
+            }
+
+            long noches = ChronoUnit.DAYS.between(reservaDTO.fechaEntrada(), reservaDTO.fechaSalida());
+            if (noches <= 0) {
+                throw new IllegalArgumentException("La fecha de salida debe ser posterior a la fecha de entrada.");
+            }
+
+            //calcular total
+            int puntosExistentes = userEncontrado.getPuntos();
+            double precioBase = noches * habitacionEncontrada.getPrecio();
+            double descuento = puntosExistentes * 1000;
+            int puntosRestantes = puntosExistentes - ((int) (precioBase / 1000)); // para saber cuantos puntos se le quitan al usuario en la compra
+
+            if (puntos){
+                precioTotal = precioBase - descuento;
+                userEncontrado.setPuntos(puntosRestantes);
+            } else {
+                precioTotal = precioBase;
+            }
+
+            //Crear la nueva reserva usando el mapper
+            Reserva reserva = ReservaMapper.toEntity(reservaDTO, habitacionEncontrada);
+            reserva.setUser(userEncontrado);
+            reserva.setPrecioTotal(precioTotal);
+
+            //Calcular puntos otorgados por la reserva
+            TipoHabitacion tipo = habitacionEncontrada.getTipo();
+            int puntosOtorgados  = calcularPuntos(noches, puntosRestantes, tipo);
+            userEncontrado.setPuntos(puntosOtorgados);
+
+            //Guardar la reserva
+            Reserva reservaGuardada = reservaRepository.save(reserva);
+
+            //Convertir a ResponseReservaDTO
+            ResponseHabitacionDTO habitacionDTO = habitacionMapper.toResponseDTO(habitacionEncontrada);
+            return reservaMapper.toResponseDTO(reservaGuardada, habitacionDTO);
+
+        } catch (NotFoundException | IllegalArgumentException | IllegalStateException e) {
+            // Errores esperados (validaciones)
+            throw new RuntimeException("Error al crear la reserva: " + e.getMessage(), e);
+        } catch (Exception e) {
+            // Cualquier otro error inesperado (DB, Mapper, etc.)
+            throw new RuntimeException("Ocurrió un error inesperado al crear la reserva.", e);
         }
 
-        long noches = ChronoUnit.DAYS.between(reservaDTO.fechaEntrada(), reservaDTO.fechaSalida());
-        if (noches <= 0) {
-            throw new IllegalArgumentException("La fecha de salida debe ser posterior a la fecha de entrada.");
-        }
 
-        //calcular total
-        int puntosExistentes = userEncontrado.getPuntos();
-        double precioBase = noches * habitacionEncontrada.getPrecio();
-        double descuento = puntosExistentes * 1000;
-        int puntosRestantes = puntosExistentes - ((int) (precioBase / 1000)); // para saber cuantos puntos se le quitan al usuario en la compra
-
-        if (puntos){
-            precioTotal = precioBase - descuento;
-            userEncontrado.setPuntos(puntosRestantes);
-        } else {
-            precioTotal = precioBase;
-        }
-
-        //Crear la nueva reserva usando el mapper
-        Reserva reserva = ReservaMapper.toEntity(reservaDTO, habitacionEncontrada);
-        reserva.setUser(userEncontrado);
-        reserva.setPrecioTotal(precioTotal);
-
-        //Calcular puntos otorgados por la reserva
-        TipoHabitacion tipo = habitacionEncontrada.getTipo();
-        int puntosOtorgados  = calcularPuntos(noches, puntosRestantes, tipo);
-        userEncontrado.setPuntos(puntosOtorgados);
-
-        //Guardar la reserva
-        Reserva reservaGuardada = reservaRepository.save(reserva);
-
-        //Convertir a ResponseReservaDTO
-        ResponseHabitacionDTO habitacionDTO = habitacionMapper.toResponseDTO(habitacionEncontrada);
-        return reservaMapper.toResponseDTO(reservaGuardada, habitacionDTO);
     }
 
     private int calcularPuntos(long noches, int puntosRestantes, TipoHabitacion tipo) {

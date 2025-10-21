@@ -3,6 +3,7 @@ package com.proyectohotelsoft.backend.controller;
 import com.proyectohotelsoft.backend.dto.HabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ResponseHabitacionDTO;
 import com.proyectohotelsoft.backend.exceptions.AlreadyExistsException;
+import com.proyectohotelsoft.backend.exceptions.NotFoundException;
 import com.proyectohotelsoft.backend.services.CloudinaryService;
 import com.proyectohotelsoft.backend.services.HabitacionService;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +60,7 @@ public class HabitacionController {
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevaHabitacion);
 
         } catch (AlreadyExistsException ae) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ae.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error: ", ae.getMessage()));
 
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -162,15 +163,36 @@ public class HabitacionController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error al subir imágenes a Cloudinary: " + e.getMessage()));
-        } catch (Exception e) {
+
+        } catch (AlreadyExistsException ae) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", ae.getMessage()));
+
+        } catch (NotFoundException nfe) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", nfe.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }
     }
 
     @DeleteMapping("/{numeroHabitacion}")
-    public ResponseEntity<Void> eliminarHabitacion(@PathVariable String numeroHabitacion) {
-        habitacionService.eliminarHabitacion(numeroHabitacion);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> eliminarHabitacion(@PathVariable String numeroHabitacion) {
+
+        try {
+            habitacionService.eliminarHabitacion(numeroHabitacion);
+            return ResponseEntity.noContent().build();
+
+        } catch (NotFoundException nfe) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", nfe.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+
+        }
     }
 }

@@ -4,6 +4,7 @@ import com.proyectohotelsoft.backend.dto.EmailDTO;
 import com.proyectohotelsoft.backend.services.ContactoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,16 @@ public class ContactoServiceImpl implements ContactoService {
 
     @Override
     public void enviarCorreo(EmailDTO emailDTO) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(emailDTO.getDestinatario());
+            message.setSubject(emailDTO.getAsunto());
+            message.setText(emailDTO.getCuerpo());
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(emailDTO.getDestinatario());
-        message.setSubject(emailDTO.getAsunto());
-        message.setText(emailDTO.getCuerpo());
-
-        javaMailSender.send(message);
+            javaMailSender.send(message);
+        } catch (MailException e) {
+            throw new RuntimeException("No se pudo enviar el correo. Verifique la configuración SMTP o el destinatario.", e);
+        }
     }
 }

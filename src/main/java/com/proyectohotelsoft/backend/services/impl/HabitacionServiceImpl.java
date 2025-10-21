@@ -43,7 +43,7 @@ public class HabitacionServiceImpl implements HabitacionService {
     public Habitacion crearHabitacion(HabitacionDTO dto) {
 
         if (habitacionRepository.findByNumeroHabitacion(dto.numeroHabitacion()).isPresent()) {
-            throw new AlreadyExistsException("Esta habitacion ya existe");
+            throw new AlreadyExistsException("La habitacion numero " + dto.numeroHabitacion() + " ya existe");
         }
 
         Habitacion habitacion = habitacionMapper.toEntity(dto);
