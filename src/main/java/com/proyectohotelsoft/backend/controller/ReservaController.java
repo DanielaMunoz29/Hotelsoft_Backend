@@ -23,7 +23,7 @@ public class ReservaController {
     private final ReservaService reservaService;
 
 
-    @PostMapping
+    @PostMapping("/crear")
     public ResponseEntity<?> crearReserva(@RequestBody ReservaDTO reservaDTO, @RequestParam boolean puntos) {
 
         try {
