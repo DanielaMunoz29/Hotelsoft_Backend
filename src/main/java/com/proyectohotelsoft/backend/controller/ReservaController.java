@@ -2,6 +2,7 @@ package com.proyectohotelsoft.backend.controller;
 
 import com.proyectohotelsoft.backend.dto.ReservaDTO;
 import com.proyectohotelsoft.backend.dto.ResponseReservaDTO;
+import com.proyectohotelsoft.backend.exceptions.NoPointsEnoughException;
 import com.proyectohotelsoft.backend.exceptions.NotFoundException;
 import com.proyectohotelsoft.backend.services.ReservaService;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class ReservaController {
         try {
             ResponseReservaDTO reservaCreada = reservaService.crearReserva(reservaDTO, puntos);
             return ResponseEntity.status(HttpStatus.CREATED).body(reservaCreada);
-        }catch (RuntimeException e){
+        } catch (RuntimeException e){
 
             return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
