@@ -98,7 +98,7 @@ public class ReservaServiceImpl implements ReservaService {
             // Si no usa puntos, el precio total se mantiene igual
             // Ahora calculamos los puntos que gana por la reserva
             TipoHabitacion tipo = habitacionEncontrada.getTipo();
-            int puntosGanados = calcularPuntos(noches, puntosExistentes - puntosUsados, tipo);
+            int puntosGanados = calcularPuntos(noches, tipo);
 
             // Sumar los nuevos puntos
             userEncontrado.setPuntos(userEncontrado.getPuntos() + puntosGanados);
@@ -126,14 +126,14 @@ public class ReservaServiceImpl implements ReservaService {
 
     }
 
-    private int calcularPuntos(long noches, int puntosRestantes, TipoHabitacion tipo) {
+    private int calcularPuntos(long noches, TipoHabitacion tipo) {
 
         int puntos = 0;
         switch (tipo){
-            case DOBLE -> puntos = puntosRestantes + (2*(int)noches);
-            case FAMILIAR -> puntos = puntosRestantes + (3*(int)noches);
-            case SENCILLA -> puntos = puntosRestantes + (int)noches;
-            case SUITE -> puntos = puntosRestantes + (4*(int)noches);
+            case DOBLE -> puntos = (2*(int)noches);
+            case FAMILIAR -> puntos = (3*(int)noches);
+            case SENCILLA -> puntos = (int)noches;
+            case SUITE -> puntos = (4*(int)noches);
         }
         return puntos;
     }
