@@ -1,6 +1,7 @@
 package com.proyectohotelsoft.backend.controller;
 
 
+import com.proyectohotelsoft.backend.dto.ContactenosDTO;
 import com.proyectohotelsoft.backend.dto.EmailDTO;
 import com.proyectohotelsoft.backend.services.ContactoService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class ContactoController {
     private final ContactoService contactoService;
 
     @PostMapping("/send")
-    public ResponseEntity<String> sendEmail(@RequestBody EmailDTO request) {
+    public ResponseEntity<String> sendEmail(@RequestBody ContactenosDTO request) {
         try {
             contactoService.enviarCorreo(request);
             return ResponseEntity.ok("Correo enviado con éxito");

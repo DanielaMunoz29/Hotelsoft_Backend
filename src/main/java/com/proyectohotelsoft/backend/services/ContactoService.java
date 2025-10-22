@@ -1,9 +1,9 @@
 package com.proyectohotelsoft.backend.services;
 
-import com.proyectohotelsoft.backend.dto.EmailDTO;
+import com.proyectohotelsoft.backend.dto.ContactenosDTO;
 
 public interface ContactoService {
 
-    void enviarCorreo(EmailDTO emailDTO);
+    void enviarCorreo(ContactenosDTO request);
 
 }

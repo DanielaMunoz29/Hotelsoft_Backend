@@ -28,4 +28,55 @@ public class CloudinaryService {
         }
         return urls;
     }
+
+
+    // ==============================
+    // ELIMINAR IMAGEN POR URL
+    // ==============================
+    public void eliminarImagenPorUrl(String imageUrl) {
+        try {
+            String publicId = extraerPublicId(imageUrl);
+            if (publicId != null) {
+                cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error al eliminar imagen de Cloudinary: " + e.getMessage(), e);
+        }
+    }
+
+    // ==============================
+    // ELIMINAR MÚLTIPLES IMÁGENES
+    // ==============================
+    public void eliminarMultiplesImagenes(List<String> urls) {
+        for (String url : urls) {
+            eliminarImagenPorUrl(url);
+        }
+    }
+
+    private String extraerPublicId(String imageUrl) {
+        try {
+            // Ejemplo: https://res.cloudinary.com/dvkvps1fy/image/upload/v1761107775/tes43ox9ycvhqfuf78qv.jpg
+            int uploadIndex = imageUrl.indexOf("/upload/");
+            if (uploadIndex == -1) return null;
+
+            // Tomamos todo después de "/upload/"
+            String afterUpload = imageUrl.substring(uploadIndex + 8);
+
+            // Quitamos la parte de versión "v1761107775/"
+            int slashIndex = afterUpload.indexOf('/');
+            if (slashIndex != -1 && afterUpload.startsWith("v")) {
+                afterUpload = afterUpload.substring(slashIndex + 1);
+            }
+
+            // Quitamos la extensión del archivo (.jpg, .png, etc.)
+            int dotIndex = afterUpload.lastIndexOf('.');
+            if (dotIndex != -1) {
+                afterUpload = afterUpload.substring(0, dotIndex);
+            }
+
+            return afterUpload;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

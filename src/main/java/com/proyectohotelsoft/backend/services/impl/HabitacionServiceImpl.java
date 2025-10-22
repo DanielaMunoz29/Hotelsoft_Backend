@@ -11,6 +11,7 @@ import com.proyectohotelsoft.backend.exceptions.NotFoundException;
 import com.proyectohotelsoft.backend.mappers.HabitacionMapper;
 import com.proyectohotelsoft.backend.repository.HabitacionRepository;
 import com.proyectohotelsoft.backend.repository.ReservaRepository;
+import com.proyectohotelsoft.backend.services.CloudinaryService;
 import com.proyectohotelsoft.backend.services.HabitacionService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,8 @@ public class HabitacionServiceImpl implements HabitacionService {
     private final HabitacionMapper habitacionMapper;
 
     private final ReservaRepository reservaRepository;
+
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional
@@ -124,6 +127,10 @@ public class HabitacionServiceImpl implements HabitacionService {
 
         // Reemplazar imágenes solo si llegan nuevas
         if (dto.imagenes() != null && !dto.imagenes().isEmpty()) {
+            List<String> imagenesAnteriores = habitacion.getImagenes();
+            if (imagenesAnteriores != null && !imagenesAnteriores.isEmpty()) {
+                cloudinaryService.eliminarMultiplesImagenes(imagenesAnteriores);
+            }
             habitacion.setImagenes(new ArrayList<>(dto.imagenes()));
         }
 
@@ -206,4 +213,12 @@ public class HabitacionServiceImpl implements HabitacionService {
         }
 
     }
+
+
+
+
+
+
+
+
 }
