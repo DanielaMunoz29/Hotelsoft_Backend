@@ -8,6 +8,7 @@ import com.proyectohotelsoft.backend.entity.Reserva;
 import com.proyectohotelsoft.backend.entity.User;
 import com.proyectohotelsoft.backend.entity.enums.EstadoReserva;
 import com.proyectohotelsoft.backend.entity.enums.TipoHabitacion;
+import com.proyectohotelsoft.backend.exceptions.NoPointsEnoughException;
 import com.proyectohotelsoft.backend.exceptions.NotFoundException;
 import com.proyectohotelsoft.backend.mappers.HabitacionMapper;
 import com.proyectohotelsoft.backend.mappers.ReservaMapper;
@@ -49,9 +50,6 @@ public class ReservaServiceImpl implements ReservaService {
     public ResponseReservaDTO crearReserva(ReservaDTO reservaDTO, boolean puntos) {
 
         try {
-
-            double precioTotal = 0;
-
             Habitacion habitacionEncontrada = habitacionRepository.findById(reservaDTO.idHabitacion())
                     .orElseThrow(() -> new NotFoundException("Habitacion con id " + reservaDTO.idHabitacion() + " no existe"));
 
@@ -63,7 +61,7 @@ public class ReservaServiceImpl implements ReservaService {
             List<Reserva> reservasExistentes = reservaRepository.findByHabitacionId(habitacionEncontrada.getId());
             boolean ocupada = reservasExistentes.stream().anyMatch(r ->
                     r.getFechaEntrada().isBefore(reservaDTO.fechaSalida()) &&
-                            r.getFechaSalida().isAfter(reservaDTO.fechaEntrada())
+                    r.getFechaSalida().isAfter(reservaDTO.fechaEntrada())
             );
             if (ocupada) {
                 throw new IllegalStateException("La habitación está ocupada en las fechas seleccionadas.");
@@ -74,37 +72,50 @@ public class ReservaServiceImpl implements ReservaService {
                 throw new IllegalArgumentException("La fecha de salida debe ser posterior a la fecha de entrada.");
             }
 
-            //calcular total
-            int puntosExistentes = userEncontrado.getPuntos();
+            // Calcular precio base
             double precioBase = noches * habitacionEncontrada.getPrecio();
-            double descuento = puntosExistentes * 1000;
-            int puntosRestantes = puntosExistentes - ((int) (precioBase / 1000)); // para saber cuantos puntos se le quitan al usuario en la compra
+            double precioTotal = precioBase;
 
-            if (puntos){
-                precioTotal = precioBase - descuento;
-                userEncontrado.setPuntos(puntosRestantes);
-            } else {
-                precioTotal = precioBase;
+            int puntosExistentes = userEncontrado.getPuntos();
+            int puntosUsados = 0;
+
+            // Si el usuario quiere usar puntos
+            if (puntos) {
+                if (puntosExistentes <= 0) {
+                    throw new NoPointsEnoughException("No tienes puntos disponibles para usar.");
+                }
+
+                if (reservaDTO.puntos() > puntosExistentes) {
+                    throw new NoPointsEnoughException("No tienes suficientes puntos para usar esa cantidad.");
+                }
+
+                puntosUsados = reservaDTO.puntos();
+                double descuento = puntosUsados * 1000; // 1 punto = $1000 (según tu lógica)
+                precioTotal = Math.max(precioBase - descuento, 0); // evita valores negativos
+                userEncontrado.setPuntos(puntosExistentes - puntosUsados);
             }
 
-            //Crear la nueva reserva usando el mapper
+            // Si no usa puntos, el precio total se mantiene igual
+            // Ahora calculamos los puntos que gana por la reserva
+            TipoHabitacion tipo = habitacionEncontrada.getTipo();
+            int puntosGanados = calcularPuntos(noches, puntosExistentes - puntosUsados, tipo);
+
+            // Sumar los nuevos puntos
+            userEncontrado.setPuntos(userEncontrado.getPuntos() + puntosGanados);
+
+            // Crear reserva
             Reserva reserva = ReservaMapper.toEntity(reservaDTO, habitacionEncontrada);
             reserva.setUser(userEncontrado);
             reserva.setPrecioTotal(precioTotal);
 
-            //Calcular puntos otorgados por la reserva
-            TipoHabitacion tipo = habitacionEncontrada.getTipo();
-            int puntosOtorgados  = calcularPuntos(noches, puntosRestantes, tipo);
-            userEncontrado.setPuntos(puntosOtorgados);
-
-            //Guardar la reserva
+            // Guardar en DB
             Reserva reservaGuardada = reservaRepository.save(reserva);
 
-            //Convertir a ResponseReservaDTO
+            // Retornar DTO de respuesta
             ResponseHabitacionDTO habitacionDTO = habitacionMapper.toResponseDTO(habitacionEncontrada);
             return reservaMapper.toResponseDTO(reservaGuardada, habitacionDTO);
 
-        } catch (NotFoundException | IllegalArgumentException | IllegalStateException e) {
+        } catch (NotFoundException | IllegalArgumentException | IllegalStateException | NoPointsEnoughException e) {
             // Errores esperados (validaciones)
             throw new RuntimeException("Error al crear la reserva: " + e.getMessage(), e);
         } catch (Exception e) {

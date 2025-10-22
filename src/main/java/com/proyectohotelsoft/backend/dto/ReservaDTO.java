@@ -10,5 +10,7 @@ public record ReservaDTO(
     String email,
     String telefono,
     LocalDateTime fechaEntrada,
-    LocalDateTime fechaSalida
+    LocalDateTime fechaSalida,
+
+    int puntos
 ) {}
