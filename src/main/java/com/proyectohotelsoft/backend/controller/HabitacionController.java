@@ -75,11 +75,11 @@ public class HabitacionController {
         return ResponseEntity.ok(habitaciones);
     }
 
-    @GetMapping("/{numeroHabitacion}")
+    /*@GetMapping("/{numeroHabitacion}")
     public ResponseEntity<ResponseHabitacionDTO> getByNumero(@PathVariable String numeroHabitacion) {
         ResponseHabitacionDTO habitacion = habitacionService.getByNumero(numeroHabitacion);
         return ResponseEntity.ok(habitacion);
-    }
+    }*/
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseHabitacionDTO> getById(@PathVariable Long id) {
