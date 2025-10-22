@@ -98,6 +98,8 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken = jwtUtils.generarToken(user.getEmail(),Map.of("idUsuario", user.getId(),
                                                                           "nombre", user.getNombreCompleto(),
+                                                                          "cedula", user.getCedula(),
+                                                                          "telefono", user.getTelefono(),
                                                                           "role", user.getRole()));
         String refreshToken = generateRefreshToken(user);
 
