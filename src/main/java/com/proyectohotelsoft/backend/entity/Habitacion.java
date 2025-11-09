@@ -64,4 +64,8 @@ public class Habitacion {
     @OneToMany(mappedBy = "habitacion", cascade = CascadeType.ALL)
     private List<Reserva> reserva;
 
+    @OneToMany(mappedBy = "habitacion", cascade = CascadeType.ALL)
+    private List<Limpieza> limpiezas = new ArrayList<>();
+
+
 }

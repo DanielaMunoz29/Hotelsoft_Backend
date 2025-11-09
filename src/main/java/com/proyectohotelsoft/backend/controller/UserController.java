@@ -1,8 +1,10 @@
 package com.proyectohotelsoft.backend.controller;
 
 import com.proyectohotelsoft.backend.dto.ChangePasswordDTO;
+import com.proyectohotelsoft.backend.dto.LimpiezaDto;
 import com.proyectohotelsoft.backend.dto.RegisterUserDTO;
 import com.proyectohotelsoft.backend.dto.UserDTO;
+import com.proyectohotelsoft.backend.services.LimpiezaService;
 import com.proyectohotelsoft.backend.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +22,16 @@ public class UserController {
 
     private final UserService userService;
 
+    private final LimpiezaService limpiezaService;
+
     /**
      * Constructor que recibe las dependencias necesarias
      * 
      * @param userService Servicio para operaciones de usuarios
      */
-    public UserController(UserService userService) {
+    public UserController(UserService userService, LimpiezaService limpiezaService) {
         this.userService = userService;
+        this.limpiezaService = limpiezaService;
     }
 
     /**
@@ -294,4 +299,22 @@ public class UserController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+
+
+    @PostMapping("/registrarLimpieza")
+    public ResponseEntity<LimpiezaDto> registrarLimpieza(@RequestBody LimpiezaDto dto) {
+        return ResponseEntity.ok(limpiezaService.registrarLimpieza(dto));
+    }
+
+    @GetMapping("/ListarLimpiezas")
+    public ResponseEntity<List<LimpiezaDto>> listarLimpiezas() {
+        return ResponseEntity.ok(limpiezaService.listarLimpiezas());
+    }
+    @GetMapping("/listarLimpiezaByusuario/{userId}")
+    public ResponseEntity<List<LimpiezaDto>> listarLimpiezasPorUsuario(@PathVariable Long userId) {
+        return ResponseEntity.ok(limpiezaService.listarLimpiezasPorUsuario(userId));
+    }
+
+
 }
