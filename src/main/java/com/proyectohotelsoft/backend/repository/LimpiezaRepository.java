@@ -10,6 +10,11 @@ import java.util.List;
 public interface LimpiezaRepository extends JpaRepository<Limpieza, Long> {
 
 
+    @Query("SELECT l FROM Limpieza l WHERE l.recepcionista.cedula = :userId ORDER BY l.fechaRegistro DESC")
+    List<Limpieza> findAllByRecepcionistaCedula(@Param("userId") String userId);
+
     @Query("SELECT l FROM Limpieza l WHERE l.recepcionista.id = :userId ORDER BY l.fechaRegistro DESC")
     List<Limpieza> findAllByRecepcionistaId(@Param("userId") Long userId);
+
+
 }

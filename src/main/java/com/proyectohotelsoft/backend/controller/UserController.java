@@ -312,9 +312,17 @@ public class UserController {
         return ResponseEntity.ok(limpiezaService.listarLimpiezas());
     }
     @GetMapping("/listarLimpiezaByusuario/{userId}")
-    public ResponseEntity<List<LimpiezaDto>> listarLimpiezasPorUsuario(@PathVariable Long userId) {
+    public ResponseEntity<List<LimpiezaDto>> listarLimpiezasPorUsuario(@PathVariable String userId) {
         return ResponseEntity.ok(limpiezaService.listarLimpiezasPorUsuario(userId));
+    }
+    // 🔹 Actualizar una limpieza
+    @PutMapping("/editarLimpieza/{id}")
+    public ResponseEntity<LimpiezaDto> actualizarLimpieza(
+            @PathVariable Long id,
+            @RequestBody LimpiezaDto limpiezaDto) {
+        LimpiezaDto actualizado = limpiezaService.actualizarLimpieza(id, limpiezaDto);
+        return ResponseEntity.ok(actualizado);
     }
 
 
-}
+    }

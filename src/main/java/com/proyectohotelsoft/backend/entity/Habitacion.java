@@ -31,9 +31,11 @@ public class Habitacion {
     @Column(length = 200)
     private String descripcion;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoHabitacion tipo;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoHabitacion estado;
 

@@ -1,5 +1,6 @@
 package com.proyectohotelsoft.backend.entity;
 
+import com.proyectohotelsoft.backend.entity.enums.EstadoLimpieza;
 import com.proyectohotelsoft.backend.entity.enums.TipoAseo;
 import jakarta.persistence.*;
 import lombok.*;
@@ -36,6 +37,11 @@ public class Limpieza {
     // Detalles / observaciones
     @Column(length = 300)
     private String observaciones;
+
+    // ✅ Nuevo campo: Estado de la limpieza
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EstadoLimpieza estado = EstadoLimpieza.NO_COMPLETADO;
 
     // Fecha de registro
     @Column(nullable = false)
