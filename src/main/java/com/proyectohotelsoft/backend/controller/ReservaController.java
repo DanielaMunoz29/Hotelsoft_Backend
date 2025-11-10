@@ -1,5 +1,6 @@
 package com.proyectohotelsoft.backend.controller;
 
+import com.mercadopago.resources.preference.Preference;
 import com.proyectohotelsoft.backend.dto.ReservaDTO;
 import com.proyectohotelsoft.backend.dto.ResponseReservaDTO;
 import com.proyectohotelsoft.backend.exceptions.NoPointsEnoughException;
@@ -68,5 +69,10 @@ public class ReservaController {
         Page<ResponseReservaDTO> reservas = reservaService.buscarPorIdUsuario(id, pageable);
         return ResponseEntity.ok(reservas);
 
+    }
+
+    @PostMapping("/realizar-pago")
+    public ResponseEntity<Preference> realizarPago(@RequestParam("idReserva") String idReserva) throws Exception {
+        return ResponseEntity.ok(reservaService.realizarPagoReserva(idReserva));
     }
 }

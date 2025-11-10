@@ -1,5 +1,8 @@
 package com.proyectohotelsoft.backend.services.impl;
 
+import com.mercadopago.MercadoPagoConfig;
+import com.mercadopago.client.preference.*;
+import com.mercadopago.resources.preference.Preference;
 import com.proyectohotelsoft.backend.dto.ReservaDTO;
 import com.proyectohotelsoft.backend.dto.ResponseHabitacionDTO;
 import com.proyectohotelsoft.backend.dto.ResponseReservaDTO;
@@ -23,8 +26,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -180,4 +185,67 @@ public class ReservaServiceImpl implements ReservaService {
             return reservaMapper.toResponseDTO(reserva, habitacionDTO);
         });
     }
+
+    @Override
+    public Preference realizarPagoReserva(String idReserva) throws Exception {
+        // 1️⃣ Obtener la reserva guardada
+
+        Reserva reservaGuardada = reservaRepository.findById(Long.parseLong(idReserva)).get();
+
+        // 2️⃣ Construir el ítem que se enviará a MercadoPago
+        Habitacion habitacion = reservaGuardada.getHabitacion();
+
+        PreferenceItemRequest itemRequest = PreferenceItemRequest.builder()
+                .id(String.valueOf(habitacion.getId()))
+                .title("Reserva habitación " + habitacion.getNumeroHabitacion())
+                .description("Reserva desde " + reservaGuardada.getFechaEntrada() +
+                        " hasta " + reservaGuardada.getFechaSalida())
+                .pictureUrl(habitacion.getImagenes().isEmpty() ? null : habitacion.getImagenes().get(0))
+                .categoryId(habitacion.getTipo().name())
+                .quantity(1)
+                .currencyId("COP")
+                .unitPrice(BigDecimal.valueOf(reservaGuardada.getPrecioTotal()))
+                .build();
+
+        List<PreferenceItemRequest> itemsPasarela = List.of(itemRequest);
+
+        // 3️⃣ Configurar credenciales de MercadoPago
+        MercadoPagoConfig.setAccessToken("APP_USR-5411335358313717-100712-ffe7d21472d9eb2733d13ab9a0cdc24e-2028101571");
+
+        // 4️⃣ Configurar datos del comprador
+        // Configurar datos del comprador
+        PreferencePayerRequest payer = PreferencePayerRequest.builder()
+                .name("Comprador")
+                .surname("Sandbox")
+                .email("test_user_4853470745469862009@testuser.com")
+                .build();
+
+        // 5️⃣ Configurar URLs de retorno
+        PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
+                .success("https://app-fronted-eventosclick.web.app/pago-exitoso")
+                .failure("https://app-fronted-eventosclick.web.app/pago-fallido")
+                .pending("https://app-fronted-eventosclick.web.app/pago-pendiente")
+                .build();
+
+        // 6️⃣ Construir la preferencia con metadatos y URL de notificación
+        PreferenceRequest preferenceRequest = PreferenceRequest.builder()
+                .backUrls(backUrls)
+                .payer(payer)
+                .items(itemsPasarela)
+                .metadata(Map.of("id_reserva", reservaGuardada.getId()))
+                .notificationUrl("https://76773d1be309.ngrok-free.app/api/general/notificacion-pago")
+                .autoReturn("approved")
+                .build();
+
+        // 7️⃣ Crear la preferencia en MercadoPago
+        Preference preference = new PreferenceClient().create(preferenceRequest);
+
+        // 8️⃣ Guardar el código de preferencia en la reserva
+       //reservaGuardada.setCodigoPasarela(preference.getId());
+        //reservaRepository.save(reservaGuardada);
+
+        // 9️⃣ Retornar la preferencia generada
+        return preference;
+    }
+
 }

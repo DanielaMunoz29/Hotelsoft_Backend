@@ -1,10 +1,12 @@
 package com.proyectohotelsoft.backend.controller;
 
+import com.mercadopago.resources.preference.Preference;
 import com.proyectohotelsoft.backend.dto.ChangePasswordDTO;
 import com.proyectohotelsoft.backend.dto.LimpiezaDto;
 import com.proyectohotelsoft.backend.dto.RegisterUserDTO;
 import com.proyectohotelsoft.backend.dto.UserDTO;
 import com.proyectohotelsoft.backend.services.LimpiezaService;
+import com.proyectohotelsoft.backend.services.ReservaService;
 import com.proyectohotelsoft.backend.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,15 +25,18 @@ public class UserController {
     private final UserService userService;
 
     private final LimpiezaService limpiezaService;
+    private final ReservaService reservaService;
 
     /**
      * Constructor que recibe las dependencias necesarias
-     * 
-     * @param userService Servicio para operaciones de usuarios
+     *
+     * @param userService    Servicio para operaciones de usuarios
+     * @param reservaService
      */
-    public UserController(UserService userService, LimpiezaService limpiezaService) {
+    public UserController(UserService userService, LimpiezaService limpiezaService, ReservaService reservaService) {
         this.userService = userService;
         this.limpiezaService = limpiezaService;
+        this.reservaService = reservaService;
     }
 
     /**
@@ -324,5 +329,10 @@ public class UserController {
         return ResponseEntity.ok(actualizado);
     }
 
+
+    @PostMapping("/realizar-pago")
+    public ResponseEntity<Preference> realizarPago(@RequestParam("idReserva") String idReserva) throws Exception {
+        return ResponseEntity.ok(reservaService.realizarPagoReserva(idReserva));
+    }
 
     }

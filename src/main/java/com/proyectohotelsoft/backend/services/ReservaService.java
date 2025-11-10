@@ -1,5 +1,6 @@
 package com.proyectohotelsoft.backend.services;
 
+import com.mercadopago.resources.preference.Preference;
 import com.proyectohotelsoft.backend.dto.ReservaDTO;
 import com.proyectohotelsoft.backend.dto.ResponseReservaDTO;
 import org.springframework.data.domain.Page;
@@ -17,4 +18,5 @@ public interface ReservaService {
     void eliminarReserva(String id);
 
     Page<ResponseReservaDTO> buscarPorIdUsuario(Long id, Pageable pageable);
+    public Preference realizarPagoReserva(String idReserva)throws Exception;
 }
