@@ -222,9 +222,9 @@ public class ReservaServiceImpl implements ReservaService {
 
         // 5️⃣ Configurar URLs de retorno
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                .success("https://app-fronted-eventosclick.web.app/pago-exitoso")
-                .failure("https://app-fronted-eventosclick.web.app/pago-fallido")
-                .pending("https://app-fronted-eventosclick.web.app/pago-pendiente")
+                .success("https://hotelsoft..../pago-exitoso")
+                .failure("https://hotelsoft..../pago-fallido")
+                .pending("https://hotelsoft..../pago-pendiente")
                 .build();
 
         // 6️⃣ Construir la preferencia con metadatos y URL de notificación
