@@ -95,13 +95,15 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 🌍 Orígenes permitidos
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:4200",
-                "http://localhost:8080",
-                "https://hotelsoft-3a4b3.web.app",
-                "https://hotelsoftback-1495464507.northamerica-northeast1.run.app" // ⚠️ Añadido dominio actual de producción
-        ));
+//        configuration.setAllowedOrigins(Arrays.asList(
+//                "http://localhost:3000",
+//                "http://localhost:4200",
+//                "http://localhost:8080",
+//                "https://hotelsoft-3a4b3.web.app",
+//                "https://hotelsoftback-1495464507.northamerica-northeast1.run.app" // ⚠️ Añadido dominio actual de producción
+//        ));
+        // 📨 Headers permitidos
+        configuration.setAllowedHeaders(Arrays.asList("*"));
 
         // ✅ Métodos permitidos
         configuration.setAllowedMethods(Arrays.asList(
