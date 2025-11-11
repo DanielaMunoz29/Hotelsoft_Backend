@@ -17,12 +17,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import java.util.List;
 
-/**
- * Configuración de seguridad de Spring Security
- * Integra autenticación JWT y OAuth2 Google
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -33,88 +29,87 @@ public class SecurityConfig {
         this.tokenFilter = tokenFilter;
     }
 
+    /**
+     * Configuración principal de seguridad.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // --PUBLICOS-- //
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/users/exists/**").permitAll()
-                .requestMatchers("/api/users/register").permitAll()
-                .requestMatchers("/oauth2/**").permitAll() // Rutas OAuth2
-                .requestMatchers("/login/**").permitAll() // Rutas de login
-                .requestMatchers("/error").permitAll()
+                // Configuración CORS moderna
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // Desactivar CSRF (necesario para APIs REST)
+                .csrf(csrf -> csrf.disable())
+                // Stateless: sin sesiones en el servidor
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Autorización de rutas
+                .authorizeHttpRequests(auth -> auth
+                        // Rutas públicas
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/users/exists/**").permitAll()
+                        .requestMatchers("/api/users/register").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/**", "/error").permitAll()
 
-                //  --PROTEGIDOS-- //
-                .requestMatchers("/api/habitaciones/crearHabitacion").authenticated()
-                .requestMatchers(HttpMethod.GET, "/api/habitaciones/{numeroHabitacion}").authenticated()
-                .requestMatchers(HttpMethod.GET, "/api/habitaciones/estado/{estado}").permitAll()
-                .requestMatchers(HttpMethod.PATCH, "/api/habitaciones/{numeroHabitacion}/estado").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/habitaciones/{numeroHabitacion}").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/habitaciones/{numeroHabitacion}").authenticated()
+                        // Rutas protegidas
+                        .requestMatchers("/api/habitaciones/crearHabitacion").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/habitaciones/{numeroHabitacion}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/habitaciones/estado/{estado}").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/habitaciones/{numeroHabitacion}/estado").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/habitaciones/{numeroHabitacion}").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/habitaciones/{numeroHabitacion}").authenticated()
 
-                .anyRequest().permitAll()
-            )
-            .oauth2Login(oauth2 -> oauth2
-                .defaultSuccessUrl("http://localhost:4200/login-success", true)
-                .failureUrl("http://localhost:4200/login-error")
-            )
-            .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
+                        // Todo lo demás permitido
+                        .anyRequest().permitAll()
+                )
+                // Configuración OAuth2 (si usas login con Google)
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("http://localhost:4200/login-success", true)
+                        .failureUrl("http://localhost:4200/login-error")
+                )
+                // Filtro JWT personalizado antes del filtro de autenticación
+                .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
-     * Configuración de CORS (Cross-Origin Resource Sharing)
+     * Configuración CORS para permitir llamadas desde tu frontend (Cloud Run y local)
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        
-//        configuration.setAllowedOrigins(Arrays.asList(
-//            "http://localhost:3000",
-//            "http://localhost:4200",
-//            "http://localhost:8080",
-//            "https://hotelsoft-3a4b3.web.app",
-//                "https://hotelsoft-frontend-1d94564a507.northeamerica-northeast1.run.app"// tu frontend en GCP
-//        ));
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        
-        configuration.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        CorsConfiguration config = new CorsConfiguration();
+
+        // 🔹 Dominios permitidos (agrega tu dominio actual de frontend aquí)
+        config.setAllowedOrigins(List.of(
+                "https://hotelfront-1495464507.northamerica-northeast1.run.app",
+                "http://localhost:4200"
         ));
-        
-        configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization", 
-            "Content-Type", 
-            "X-Requested-With",
-            "Accept",
-            "Origin",
-            "Access-Control-Request-Method",
-            "Access-Control-Request-Headers"
-        ));
-        
-        configuration.setExposedHeaders(Arrays.asList(
-            "Authorization",
-            "Content-Type"
-        ));
-        
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
-        
+
+        // Métodos y headers permitidos
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization", "Content-Type"));
+
+        // Permitir envío de cookies/tokens
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 
+    /**
+     * Bean para el AuthenticationManager
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * Bean para encriptar contraseñas
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
