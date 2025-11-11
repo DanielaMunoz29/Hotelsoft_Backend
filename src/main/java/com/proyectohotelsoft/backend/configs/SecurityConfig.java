@@ -77,8 +77,8 @@ public class SecurityConfig {
 
                 // --- Configuración OAuth2 (Google) --- //
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:4200/login-success", true)
-                        .failureUrl("http://localhost:4200/login-error")
+                        .defaultSuccessUrl("https://hotelsoftback-1495464507.northamerica-northeast1.run.app/login-success", true)
+                        .failureUrl("https://hotelsoftback-1495464507.northamerica-northeast1.run.app/login-error")
                 )
 
                 // --- Filtro JWT personalizado --- //
