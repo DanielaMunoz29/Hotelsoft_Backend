@@ -18,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/reservas")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://hotelsoftback-1495464507.northamerica-northeast1.run.app")
 public class ReservaController {
 
     @Autowired
