@@ -1,35 +1,31 @@
-steps:
-  # 1) Construir imagen Docker
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'build',
-        '-t',
-        'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoftback-repo/hotelsoftback:$COMMIT_SHA',
-        '.'
-      ]
-
-  # 2) Subir imagen a Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'push',
-        'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoftback-repo/hotelsoftback:$COMMIT_SHA'
-      ]
-
-  # 3) Desplegar en Cloud Run con variables de entorno
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        MONGO_URI=$(gcloud secrets versions access latest --secret="mongodb-uri")
-        gcloud run services update "eventosclick-backend" \
-          --image "southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoftback-repo/hotelsoftback:$COMMIT_SHA" \
-          --region "southamerica-east1" \
-          --platform managed \
-          --allow-unauthenticated "
-
-# === Configuración de logs y opciones ===
+# Cloud Build configuration para Backend - HotelSoft
 options:
   logging: CLOUD_LOGGING_ONLY
+
+images:
+  - 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoft-repo/hotelsoftback'
+
+steps:
+  # Paso 1: Construir la imagen Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Docker Image'
+    args: ['build', '-t', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoft-repo/hotelsoftback', '.']
+
+  # Paso 2: Publicar la imagen en Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Docker Image'
+    args: ['push', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoft-repo/hotelsoftback']
+
+  # Paso 3: Desplegar en Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy to Cloud Run'
+    entrypoint: 'gcloud'
+    args:
+      [
+        'run', 'deploy', 'hotelsoftback',
+        '--image', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoft-repo/hotelsoftback',
+        '--region', 'southamerica-east1',
+        '--platform', 'managed',
+        '--allow-unauthenticated',
+        '--quiet'
+      ]
