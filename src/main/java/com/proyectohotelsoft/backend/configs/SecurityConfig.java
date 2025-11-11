@@ -78,7 +78,8 @@ public class SecurityConfig {
             "http://localhost:3000", 
             "http://localhost:4200",
             "http://localhost:8080",
-            "https://hotelsoft-3a4b3.web.app"
+            "https://hotelsoft-3a4b3.web.app",
+                "https://hotelsoft-frontend-1d94564a507.northeamerica-northeast1.run.app"// tu frontend en GCP
         ));
         
         configuration.setAllowedMethods(Arrays.asList(
