@@ -5,7 +5,7 @@ steps:
       [
         'build',
         '-t',
-        'southamerica-east1-docker.pkg.dev/$PROJECT_ID/eventosclick-repo/eventosclick-backend:$COMMIT_SHA',
+        'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoftback-repo/hotelsoftback:$COMMIT_SHA',
         '.'
       ]
 
@@ -14,7 +14,7 @@ steps:
     args:
       [
         'push',
-        'southamerica-east1-docker.pkg.dev/$PROJECT_ID/eventosclick-repo/eventosclick-backend:$COMMIT_SHA'
+        'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoftback-repo/hotelsoftback:$COMMIT_SHA'
       ]
 
   # 3) Desplegar en Cloud Run con variables de entorno
@@ -25,11 +25,10 @@ steps:
       - |
         MONGO_URI=$(gcloud secrets versions access latest --secret="mongodb-uri")
         gcloud run services update "eventosclick-backend" \
-          --image "southamerica-east1-docker.pkg.dev/$PROJECT_ID/eventosclick-repo/eventosclick-backend:$COMMIT_SHA" \
+          --image "southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoftback-repo/hotelsoftback:$COMMIT_SHA" \
           --region "southamerica-east1" \
           --platform managed \
-          --allow-unauthenticated \
-          --set-env-vars "MONGO_URI=$$MONGO_URI"
+          --allow-unauthenticated "
 
 # === Configuración de logs y opciones ===
 options:
