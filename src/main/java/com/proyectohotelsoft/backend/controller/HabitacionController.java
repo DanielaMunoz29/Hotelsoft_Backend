@@ -26,7 +26,7 @@ import java.util.Map;
 @RequestMapping("api/habitaciones")
 @RequiredArgsConstructor
 //@CrossOrigin(origins = "https://hotelsoftback-1495464507.northamerica-northeast1.run.app")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://hotelfront-1495464507.northamerica-northeast1.run.app")
 public class HabitacionController {
 
     @Autowired
