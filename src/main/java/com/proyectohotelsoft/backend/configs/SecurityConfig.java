@@ -80,7 +80,7 @@ public class SecurityConfig {
 
         // 🔹 Dominios permitidos (agrega tu dominio actual de frontend aquí)
         config.setAllowedOrigins(List.of(
-                "https://hotelfront-1495464507.northamerica-northeast1.run.app",
+                "https://hotelsoftback-1495464507.northamerica-northeast1.run.app",
                 "http://localhost:4200"
         ));
 
