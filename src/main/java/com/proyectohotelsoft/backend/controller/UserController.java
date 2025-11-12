@@ -40,6 +40,18 @@ public class UserController {
         this.reservaService = reservaService;
     }
 
+    @PutMapping("/{id}/role")
+    public ResponseEntity<UserDTO> updateUserRole(
+            @PathVariable Long id,
+            @RequestParam String role) {
+        try {
+            UserDTO updatedUser = userService.updateUserRole(id, role);
+            return ResponseEntity.ok(updatedUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     /**
      * Obtiene todos los usuarios del sistema
      * 
