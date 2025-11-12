@@ -66,7 +66,7 @@ public class ReservaServiceImpl implements ReservaService {
             List<Reserva> reservasExistentes = reservaRepository.findByHabitacionId(habitacionEncontrada.getId());
             boolean ocupada = reservasExistentes.stream().anyMatch(r ->
                     r.getFechaEntrada().isBefore(reservaDTO.fechaSalida()) &&
-                    r.getFechaSalida().isAfter(reservaDTO.fechaEntrada())
+                    r.getFechaSalida().isAfter(reservaDTO.fechaEntrada()) && r.getEstado() != EstadoReserva.CANCELADO
             );
             if (ocupada) {
                 throw new IllegalStateException("La habitación está ocupada en las fechas seleccionadas.");
