@@ -62,8 +62,8 @@ public class SecurityConfig {
                 )
                 // Configuración OAuth2 (si usas login con Google)
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:4200/login-success", true)
-                        .failureUrl("http://localhost:4200/login-error")
+                        .defaultSuccessUrl("https://hotelfront-1495464507.northamerica-northeast1.run.app/login-success", true)
+                        .failureUrl("https://hotelfront-1495464507.northamerica-northeast1.run.app/login-error")
                 )
                 // Filtro JWT personalizado antes del filtro de autenticación
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
