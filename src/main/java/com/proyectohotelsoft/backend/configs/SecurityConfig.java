@@ -78,26 +78,23 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // 🔹 Dominios permitidos (agrega tu dominio actual de frontend aquí)
+        // 🔹 Agrega el dominio del frontend desplegado
         config.setAllowedOrigins(List.of(
-                "https://hotelsoftback-1495464507.northamerica-northeast1.run.app",
-                "http://localhost:4200"
+                "https://hotelfront-1495464507.northamerica-northeast1.run.app", // tu frontend en Cloud Run
+                "http://localhost:4200" // para desarrollo local
         ));
 
-        // Métodos y headers permitidos
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization", "Content-Type"));
-
-        // Permitir envío de cookies/tokens
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
+
 
     /**
      * Bean para el AuthenticationManager
