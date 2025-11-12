@@ -108,12 +108,8 @@ public class LimpiezaService {
     }
 
     public List<LimpiezaDto> listarLimpiezasPorUsuario(String userId) {
-        List<Limpieza> limpiezas = limpiezaRepository.findAllByRecepcionistaId(Long.parseLong(userId));
-
-        User usuario = userRepository.findByCedula(userId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con cédula: " + userId));
-
-       // List<Limpieza> limpiezas = limpiezaRepository.findAllByRecepcionistaId(usuario.getId());
+        User user = userRepository.findByCedula(userId).get();
+        List<Limpieza> limpiezas = limpiezaRepository.findAllByRecepcionistaId(user.getId());
 
         return limpiezas.stream()
                 .map(this::toDto)
