@@ -17,15 +17,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import java.util.List;
 
-/**
- * Configuración principal de seguridad.
- *
- * - Integra autenticación JWT y OAuth2 con Google.
- * - Gestiona las reglas de acceso a los endpoints.
- * - Configura CORS y la política de sesión (sin estado).
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -37,107 +30,77 @@ public class SecurityConfig {
     }
 
     /**
-     * Configura la cadena principal de filtros de seguridad.
+     * Configuración principal de seguridad.
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // --- Configuración CORS / CSRF --- //
+                // Configuración CORS moderna
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // Desactivar CSRF (necesario para APIs REST)
                 .csrf(csrf -> csrf.disable())
-
-                // --- Sesión sin estado (JWT) --- //
+                // Stateless: sin sesiones en el servidor
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // --- Rutas públicas y protegidas --- //
+                // Autorización de rutas
                 .authorizeHttpRequests(auth -> auth
-                        // Públicas
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api/users/exists/**",
-                                "/api/users/register",
-                                "/oauth2/**",
-                                "/login/**",
-                                "/error"
-                        ).permitAll()
+                        // Rutas públicas
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/users/exists/**").permitAll()
+                        .requestMatchers("/api/users/register").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/**", "/error").permitAll()
 
-                        // Protegidas
+                        // Rutas protegidas
                         .requestMatchers("/api/habitaciones/crearHabitacion").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/habitaciones/{numeroHabitacion}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/habitaciones/estado/{estado}").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/habitaciones/{numeroHabitacion}/estado").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/habitaciones/{numeroHabitacion}").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/habitaciones/{numeroHabitacion}").authenticated()
 
-                        // Permitir GET de habitaciones por estado
-                        .requestMatchers(HttpMethod.GET, "/api/habitaciones/estado/{estado}").permitAll()
-
-                        // Cualquier otra ruta
+                        // Todo lo demás permitido
                         .anyRequest().permitAll()
                 )
-
-                // --- Configuración OAuth2 (Google) --- //
+                // Configuración OAuth2 (si usas login con Google)
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("https://hotelsoftback-1495464507.northamerica-northeast1.run.app/login-success", true)
-                        .failureUrl("https://hotelsoftback-1495464507.northamerica-northeast1.run.app/login-error")
+                        .defaultSuccessUrl("http://localhost:4200/login-success", true)
+                        .failureUrl("http://localhost:4200/login-error")
                 )
-
-                // --- Filtro JWT personalizado --- //
+                // Filtro JWT personalizado antes del filtro de autenticación
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
-     * Configuración de CORS (Cross-Origin Resource Sharing).
+     * Configuración CORS para permitir llamadas desde tu frontend (Cloud Run y local)
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-        // 🌍 Orígenes permitidos
-//        configuration.setAllowedOrigins(Arrays.asList(
-//                "http://localhost:3000",
-//                "http://localhost:4200",
-//                "http://localhost:8080",
-//                "https://hotelsoft-3a4b3.web.app",
-//                "https://hotelsoftback-1495464507.northamerica-northeast1.run.app" // ⚠️ Añadido dominio actual de producción
-//        ));
-        // 📨 Headers permitidos
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-
-        // ✅ Métodos permitidos
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        // 🔹 Dominios permitidos (agrega tu dominio actual de frontend aquí)
+        config.setAllowedOrigins(List.of(
+                "https://hotelfront-1495464507.northamerica-northeast1.run.app",
+                "http://localhost:4200"
         ));
 
-        // 📨 Headers permitidos
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "X-Requested-With",
-                "Accept",
-                "Origin",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
-        ));
+        // Métodos y headers permitidos
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization", "Content-Type"));
 
-        // 🔍 Headers expuestos al cliente
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type"
-        ));
+        // Permitir envío de cookies/tokens
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // 1 hora de caché para preflight
-
-        // Registrar configuración para todas las rutas
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 
     /**
-     * Bean de AuthenticationManager para autenticación manual.
+     * Bean para el AuthenticationManager
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -145,7 +108,7 @@ public class SecurityConfig {
     }
 
     /**
-     * Bean de codificador de contraseñas.
+     * Bean para encriptar contraseñas
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
