@@ -80,6 +80,10 @@ dependencies {
 	implementation 'org.postgresql:postgresql:42.7.3'
 
 	implementation 'com.google.cloud.sql:postgres-socket-factory:1.13.1'
+
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+
 }
 
 tasks.named('test') {
