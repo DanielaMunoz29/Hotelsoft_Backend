@@ -19,6 +19,13 @@ configurations {
 		extendsFrom annotationProcessor
 	}
 }
+configurations.all {
+	resolutionStrategy {
+		force 'com.google.guava:guava:32.1.1-jre'
+		exclude group: 'com.google.collections', module: 'google-collections'
+	}
+}
+
 
 repositories {
 	mavenCentral()
@@ -69,6 +76,10 @@ dependencies {
 
 	//PASARELA
 	implementation 'com.mercadopago:sdk-java:2.1.27'
+
+	implementation 'org.postgresql:postgresql:42.7.3'
+
+	implementation 'com.google.cloud.sql:postgres-socket-factory:1.13.1'
 }
 
 tasks.named('test') {

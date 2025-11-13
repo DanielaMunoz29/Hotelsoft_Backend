@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("api/contactenos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "https://hotelsoftback-1495464507.northamerica-northeast1.run.app")
+@CrossOrigin(origins = "https://hotelfront-1495464507.northamerica-northeast1.run.app")
+
+//@CrossOrigin(origins = "*")
 public class ContactoController {
 
     @Autowired

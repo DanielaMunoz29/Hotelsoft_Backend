@@ -22,7 +22,8 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://hotelfront-1495464507.northamerica-northeast1.run.app")
+//@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;

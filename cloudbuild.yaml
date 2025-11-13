@@ -1,0 +1,30 @@
+# Cloud Build configuration para Backend - HotelSoft
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+images:
+  - 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoft-repo/hotelsoftback'
+
+steps:
+  # Paso 1: Construir la imagen Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Docker Image'
+    args: ['build', '-t', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoft-repo/hotelsoftback', '.']
+
+  # Paso 2: Publicar la imagen en Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Docker Image'
+    args: ['push', 'southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoft-repo/hotelsoftback']
+
+  # Paso 3: Actualizar el servicio existente en Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Update Cloud Run Service'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud run services update hotelsoftback \
+          --image southamerica-east1-docker.pkg.dev/$PROJECT_ID/hotelsoft-repo/hotelsoftback \
+          --region southamerica-east1 \
+          --platform managed \
+          --quiet

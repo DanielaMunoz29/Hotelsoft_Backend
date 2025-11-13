@@ -19,7 +19,8 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://hotelfront-1495464507.northamerica-northeast1.run.app")
+//@CrossOrigin(origins = "*")
 public class UserController {
 
     private final UserService userService;
@@ -37,6 +38,18 @@ public class UserController {
         this.userService = userService;
         this.limpiezaService = limpiezaService;
         this.reservaService = reservaService;
+    }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<UserDTO> updateUserRole(
+            @PathVariable Long id,
+            @RequestParam String role) {
+        try {
+            UserDTO updatedUser = userService.updateUserRole(id, role);
+            return ResponseEntity.ok(updatedUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
