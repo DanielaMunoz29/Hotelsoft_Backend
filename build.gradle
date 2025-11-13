@@ -84,6 +84,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
+	// Spring Boot Actuator: Proporciona endpoints de gestión y monitoreo
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    
+    // Micrometer Prometheus Registry: Expone métricas en formato Prometheus
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus' 
+    
+    // Opcional: Si usas Spring Web (que parece ser el caso por la estructura de tu proyecto)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
 }
 
 tasks.named('test') {
